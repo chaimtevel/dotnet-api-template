@@ -5,7 +5,7 @@ This app runs on dotnet 2.1 so the SDK needs to be installed on the machine befo
 
 This template has the following setup.
 
-1. [Swagger](https://github.com/domaindrivendev/Swashbuckle.AspNetCore) at https://localhost:5001/swagger/
+1. [Swagger](https://github.com/domaindrivendev/Swashbuckle.AspNetCore) available at https://localhost:5001/swagger/
 1. Logging to [Graylog](http://logs.bitbean.com)
 1. SOA wired up using dependency injection.
 1. Authentication using either external provider (for now only Google has been built) or any other.
