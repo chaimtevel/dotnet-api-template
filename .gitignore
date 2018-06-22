@@ -1,0 +1,29 @@
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+dist/
+bld/
+bin/
+Bin/
+obj/
+Obj/
+
+# visual studio
+.vs
+*.suo
+*.sln.docstates
+*.user
+
+appsettings.*.json
+
+# nuget
+*.nupkg
+
+paket-files
+/.paket/load/
+packages
