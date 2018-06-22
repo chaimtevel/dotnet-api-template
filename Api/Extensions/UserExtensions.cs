@@ -1,6 +1,7 @@
 ﻿using Api.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Auth;
 using System.Security.Claims;
 
 namespace Api.Extensions

@@ -31,13 +31,13 @@ namespace Services.Auth
         public IJwtService JwtService { get; }
         public ILogger<IAuthenticationService> Logger { get; }
 
-        public async Task<User> Login(BasicAuthentication authentication)
+        public async Task<IApiUser> Login(BasicAuthentication authentication)
         {
             await Task.CompletedTask;
-            return new User();
+            return new ApiUser();
         }
 
-        public async Task<User> Login(AuthProviders authProvider, ExternalAuthentication authentication)
+        public async Task<IApiUser> Login(AuthProviders authProvider, ExternalAuthentication authentication)
         {
             authProviderMap.TryGetValue(authProvider, out Func<AuthenticationService, ExternalAuthentication, Task<bool>> val);
 
@@ -45,7 +45,7 @@ namespace Services.Auth
 
             // for now we'll work with email. we may be able to add additional options in the future
 
-            return new User();
+            return new ApiUser();
         }
         
         private async Task<bool> Google(ExternalAuthentication authentication)

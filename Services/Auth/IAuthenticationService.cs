@@ -6,7 +6,7 @@ namespace Services.Auth
 {
     public interface IAuthenticationService
     {
-        Task<User> Login(BasicAuthentication authentication);
-        Task<User> Login(AuthProviders authProvider, ExternalAuthentication authentication);
+        Task<IApiUser> Login(BasicAuthentication authentication);
+        Task<IApiUser> Login(AuthProviders authProvider, ExternalAuthentication authentication);
     }
 }

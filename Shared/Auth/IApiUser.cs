@@ -1,4 +1,4 @@
-﻿namespace Api.Auth
+﻿namespace Shared.Auth
 {
     public interface IApiUser
     {
