@@ -1,7 +1,6 @@
-﻿using Api.Auth;
-using Api.Extensions;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Extensions;
 using System.Collections.Generic;
 
 namespace Api.Controllers
