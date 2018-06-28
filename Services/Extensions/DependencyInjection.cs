@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Services.Auth;
+using Services.DbContexts;
+using Shared.Auth;
 
 namespace Services.Extensions
 {
@@ -14,14 +16,26 @@ namespace Services.Extensions
         {
             services
                 .AddJwtService()
-                .AddEFCoreIdentity(configuration);
+                .AddAuthService()
+                .AddEFCoreIdentity(configuration)
+                .AddAutoMapper(e =>
+                {
+                    e.CreateMap<IdentityUser, ApiUser>(MemberList.None);
+                });
+
+            return services;
+        }
+
+        public static IServiceCollection AddAuthService(this IServiceCollection services)
+        {
+            services.AddScoped<IAuthenticationService, AuthenticationService>();
 
             return services;
         }
 
         public static IServiceCollection AddJwtService(this IServiceCollection services)
         {
-            services.AddTransient<IJwtService, JwtService>();
+            services.AddScoped<IJwtService, JwtService>();
 
             return services;
         }
@@ -29,11 +43,12 @@ namespace Services.Extensions
         public static IServiceCollection AddEFCoreIdentity(this IServiceCollection services, IConfiguration configuration)
         {
             // modify for the appropriate db engine
-            services.AddDbContext<IdentityDbContext>(options =>
+            services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
             services.AddIdentity<IdentityUser, IdentityRole>()
-                .AddEntityFrameworkStores<IdentityDbContext>();
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
 
             return services;
         }

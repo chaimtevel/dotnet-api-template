@@ -6,7 +6,7 @@ namespace Services.Auth
 {
     public interface IAuthenticationService
     {
-        Task<IApiUser> Login(BasicAuthentication authentication);
-        Task<IApiUser> Login(AuthProviders authProvider, ExternalAuthentication authentication);
+        Task<(bool isAuthenticated, IApiUser user)> LoginAsync(BasicAuthentication authentication);
+        Task<(bool isAuthenticated, IApiUser user)> LoginAsync(AuthProviders authProvider, ExternalAuthentication authentication);
     }
 }

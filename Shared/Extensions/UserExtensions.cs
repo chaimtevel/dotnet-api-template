@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Auth;
+using System;
 using System.Security.Claims;
 
 namespace Shared.Extensions
@@ -12,7 +13,7 @@ namespace Shared.Extensions
         {
             return new ApiUser
             {
-                ID = principal.FindFirstValue(ClaimTypes.NameIdentifier).ToInt(),
+                ID = new Guid(principal.FindFirstValue(ClaimTypes.NameIdentifier)),
                 Email = principal.FindFirstValue(ClaimTypes.Email),
                 UserName = principal.FindFirstValue(ClaimTypes.Name)
             };

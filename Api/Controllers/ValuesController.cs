@@ -22,7 +22,7 @@ namespace Api.Controllers
         }
 
         // GET api/values/5
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         [HttpGet("{id}")]
         public ActionResult<string> Get(int id)
         {

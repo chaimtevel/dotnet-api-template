@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Services.Extensions;
 using Shared.Options;
 
 namespace Api
@@ -34,7 +35,13 @@ namespace Api
             services.Configure<JwtOptions>(Configuration.GetSection(nameof(JwtOptions)));
 
             services
-                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddApiServices(Configuration)
+                .AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
                 .AddJwtBearer(o =>
                 {
                     // lets not build the main service provider yet (unsure of what the side-affects of doing that are)
@@ -43,7 +50,7 @@ namespace Api
                     collection.Configure<JwtOptions>(Configuration.GetSection(nameof(JwtOptions)));
                     var sp = collection.BuildServiceProvider();
                     var options = sp.GetService<IOptions<JwtOptions>>().Value;
-                    
+
                     o.TokenValidationParameters = new TokenValidationParameters()
                     {
                         ValidateIssuer = true,
@@ -56,7 +63,7 @@ namespace Api
                         IssuerSigningKey = options.SecretToKey,
 
                         RequireExpirationTime = true,
-                        ValidateLifetime = true,
+                        ValidateLifetime = true
 
                     };
 
