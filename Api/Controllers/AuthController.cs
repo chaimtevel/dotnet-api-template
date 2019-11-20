@@ -1,20 +1,19 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Services.Auth;
 using Shared.Auth;
-using Shared.Models;
+using Shared.Models.DB;
+using Shared.Models.Requests;
+using Shared.Models.Responses;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Api.Controllers
 {
-    [Produces("application/json")]
-    [Route("api/Auth")]
-    [ApiController]
+    [Route("api/[controller]"), ApiController]
     public class AuthController : Controller
     {
         public AuthController(IAuthenticationService authenticationService, IJwtService jwtService, ILogger<AuthController> logger)
@@ -28,12 +27,10 @@ namespace Api.Controllers
         public IJwtService JwtService { get; }
         public ILogger<AuthController> Logger { get; }
 
-        [HttpPost("login/{authProvider:authprovider}")]
-        public async Task<ActionResult<AuthenticationResponse>> Login(string authProvider, [FromBody] ExternalAuthentication authentication)
+        [HttpPost("login/{authProvider}")]
+        public async Task<ActionResult<AuthenticationResponse>> Login(AuthProviders authProvider, [FromBody] ExternalAuthenticationRequest authentication)
         {
-            var provider = System.Enum.Parse<AuthProviders>(authProvider, true);
-
-            (bool isAuthenticated, IApiUser user) = await AuthenticationService.LoginAsync(provider, authentication);
+            var (isAuthenticated, user) = await AuthenticationService.LoginAsync(authProvider, authentication);
 
             if (!isAuthenticated)
             {
@@ -46,9 +43,9 @@ namespace Api.Controllers
         }
         
         [HttpPost("login/basic")]
-        public async Task<ActionResult<AuthenticationResponse>> Login([FromBody] BasicAuthentication basicAuth)
+        public async Task<ActionResult<AuthenticationResponse>> Login([FromBody] BasicAuthenticationRequest basicAuth)
         {
-            (bool isAuthenticated, IApiUser user) = await AuthenticationService.LoginAsync(basicAuth);
+            var (isAuthenticated, user) = await AuthenticationService.LoginAsync(basicAuth);
 
             if (!isAuthenticated)
             {
@@ -60,18 +57,24 @@ namespace Api.Controllers
             return Ok(response);
         }
 
-        private AuthenticationResponse PrepareAuthenticationResponse(IApiUser user)
+        private AuthenticationResponse PrepareAuthenticationResponse(User user)
         {
             // generate our token
             
-            var claims = new List<Claim>
+            var claims = new List<System.Security.Claims.Claim>
             {
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.Email),
-                new Claim(ClaimTypes.NameIdentifier, user.ID.ToString()) // just an example
+                new System.Security.Claims.Claim(ClaimTypes.Email, user.Email),
+                new System.Security.Claims.Claim(ClaimTypes.Name, user.Email),
+                new System.Security.Claims.Claim(ClaimTypes.NameIdentifier, user.Id.ToString()) // just an example
             };
 
-            var ourToken = JwtService.GenerateToken(claims);
+            var mergedClaims = user
+                .UserRoles
+                .SelectMany(r => r.Role.RoleClaims.Select(c => c.Claim))
+                .Concat(user.Claims.Select(c => c.Claim))
+                .Select(c => new System.Security.Claims.Claim(c.ClaimType, c.ClaimValue));
+
+            var ourToken = JwtService.GenerateToken(claims.Concat(mergedClaims).ToArray());
 
             return new AuthenticationResponse
             {

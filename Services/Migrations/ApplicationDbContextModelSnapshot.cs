@@ -15,17 +15,37 @@ namespace Services.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.1.0-rtm-30799")
+                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+            modelBuilder.Entity("Shared.Models.DB.Claim", b =>
                 {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("ClaimType");
+
+                    b.Property<string>("ClaimValue");
+
+                    b.Property<string>("Description");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("Claims");
+                });
+
+            modelBuilder.Entity("Shared.Models.DB.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken();
+
+                    b.Property<string>("Description");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256);
@@ -40,33 +60,27 @@ namespace Services.Migrations
                         .HasName("RoleNameIndex")
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
-                    b.ToTable("AspNetRoles");
+                    b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("Shared.Models.DB.RoleClaim", b =>
+                {
+                    b.Property<int>("RoleID");
+
+                    b.Property<int>("ClaimID");
+
+                    b.HasKey("RoleID", "ClaimID");
+
+                    b.HasIndex("ClaimID");
+
+                    b.ToTable("RoleClaims");
+                });
+
+            modelBuilder.Entity("Shared.Models.DB.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("ClaimType");
-
-                    b.Property<string>("ClaimValue");
-
-                    b.Property<string>("RoleId")
-                        .IsRequired();
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("AspNetRoleClaims");
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
-                {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
 
                     b.Property<int>("AccessFailedCount");
 
@@ -111,63 +125,57 @@ namespace Services.Migrations
                         .HasName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
-                    b.ToTable("AspNetUsers");
+                    b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("Shared.Models.DB.UserClaim", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                    b.Property<int>("UserID");
 
-                    b.Property<string>("ClaimType");
+                    b.Property<int>("ClaimID");
 
-                    b.Property<string>("ClaimValue");
+                    b.HasKey("UserID", "ClaimID");
 
-                    b.Property<string>("UserId")
-                        .IsRequired();
+                    b.HasIndex("ClaimID");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AspNetUserClaims");
+                    b.ToTable("UserClaims");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("Shared.Models.DB.UserLogin", b =>
                 {
-                    b.Property<string>("LoginProvider");
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("nvarchar(150)");
 
-                    b.Property<string>("ProviderKey");
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("nvarchar(15)");
 
                     b.Property<string>("ProviderDisplayName");
 
-                    b.Property<string>("UserId")
-                        .IsRequired();
+                    b.Property<int>("UserID");
 
-                    b.HasKey("LoginProvider", "ProviderKey");
+                    b.HasKey("ProviderKey", "LoginProvider");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserID");
 
-                    b.ToTable("AspNetUserLogins");
+                    b.ToTable("UserLogins");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("Shared.Models.DB.UserRole", b =>
                 {
-                    b.Property<string>("UserId");
+                    b.Property<int>("UserID");
 
-                    b.Property<string>("RoleId");
+                    b.Property<int>("RoleID");
 
-                    b.HasKey("UserId", "RoleId");
+                    b.HasKey("UserID", "RoleID");
 
-                    b.HasIndex("RoleId");
+                    b.HasIndex("RoleID");
 
-                    b.ToTable("AspNetUserRoles");
+                    b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            modelBuilder.Entity("Shared.Models.DB.UserToken", b =>
                 {
-                    b.Property<string>("UserId");
+                    b.Property<int>("UserID");
 
                     b.Property<string>("LoginProvider");
 
@@ -175,53 +183,63 @@ namespace Services.Migrations
 
                     b.Property<string>("Value");
 
-                    b.HasKey("UserId", "LoginProvider", "Name");
+                    b.HasKey("UserID", "LoginProvider", "Name");
 
-                    b.ToTable("AspNetUserTokens");
+                    b.ToTable("UserTokens");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("Shared.Models.DB.RoleClaim", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole")
-                        .WithMany()
-                        .HasForeignKey("RoleId")
+                    b.HasOne("Shared.Models.DB.Claim", "Claim")
+                        .WithMany("Roles")
+                        .HasForeignKey("ClaimID")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Shared.Models.DB.Role", "Role")
+                        .WithMany("RoleClaims")
+                        .HasForeignKey("RoleID")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("Shared.Models.DB.UserClaim", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser")
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                    b.HasOne("Shared.Models.DB.Claim", "Claim")
+                        .WithMany("Users")
+                        .HasForeignKey("ClaimID")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Shared.Models.DB.User", "User")
+                        .WithMany("Claims")
+                        .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("Shared.Models.DB.UserLogin", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser")
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                    b.HasOne("Shared.Models.DB.User", "User")
+                        .WithMany("Logins")
+                        .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("Shared.Models.DB.UserRole", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole")
-                        .WithMany()
-                        .HasForeignKey("RoleId")
+                    b.HasOne("Shared.Models.DB.Role", "Role")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("RoleID")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser")
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                    b.HasOne("Shared.Models.DB.User", "User")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            modelBuilder.Entity("Shared.Models.DB.UserToken", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser")
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                    b.HasOne("Shared.Models.DB.User", "User")
+                        .WithMany("Tokens")
+                        .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618

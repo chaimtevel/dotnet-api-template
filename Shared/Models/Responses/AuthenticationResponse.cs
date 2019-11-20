@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Shared.Models
+namespace Shared.Models.Responses
 {
     public class AuthenticationResponse
     {

@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Shared.Models
+namespace Shared.Models.Requests
 {
-    public class BasicAuthentication
+    public class BasicAuthenticationRequest
     {
         [Required(AllowEmptyStrings = false)]
         public string UserName { get; set; }

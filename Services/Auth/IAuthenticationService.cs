@@ -1,12 +1,13 @@
 ﻿using Shared.Auth;
-using Shared.Models;
+using Shared.Models.DB;
+using Shared.Models.Requests;
 using System.Threading.Tasks;
 
 namespace Services.Auth
 {
     public interface IAuthenticationService
     {
-        Task<(bool isAuthenticated, IApiUser user)> LoginAsync(BasicAuthentication authentication);
-        Task<(bool isAuthenticated, IApiUser user)> LoginAsync(AuthProviders authProvider, ExternalAuthentication authentication);
+        Task<(bool isAuthenticated, User user)> LoginAsync(BasicAuthenticationRequest authentication);
+        Task<(bool isAuthenticated, User user)> LoginAsync(AuthProviders authProvider, ExternalAuthenticationRequest authentication);
     }
 }

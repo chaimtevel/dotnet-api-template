@@ -3,17 +3,19 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Shared.Auth;
-using Shared.Models;
+using Shared.Models.DB;
+using Shared.Models.Requests;
 using Shared.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using static Google.Apis.Auth.GoogleJsonWebSignature;
 
 namespace Services.Auth
 {
-    using AuthProviderMap = Dictionary<AuthProviders, Func<AuthenticationService, ExternalAuthentication, Task<(bool isAuthenticated, string email)>>>;
+    using AuthProviderMap = Dictionary<AuthProviders, Func<AuthenticationService, ExternalAuthenticationRequest, Task<(bool isAuthenticated, string email)>>>;
 
     internal class AuthenticationService : IAuthenticationService
     {
@@ -24,38 +26,31 @@ namespace Services.Auth
 
         public AuthenticationService(IOptions<JwtOptions> jwtOptions
             , IJwtService jwtService
-            , SignInManager<IdentityUser> signInManager
-            , UserManager<IdentityUser> userManager
-            , ILogger<IAuthenticationService> logger
-            , IMapper mapper)
+            , SignInManager<User> signInManager
+            , ILogger<IAuthenticationService> logger)
         {
             JwtOptions = jwtOptions;
             JwtService = jwtService;
             SignInManager = signInManager;
-            UserManager = userManager;
             Logger = logger;
-            Mapper = mapper;
         }
 
         public IOptions<JwtOptions> JwtOptions { get; }
         public IJwtService JwtService { get; }
-        public SignInManager<IdentityUser> SignInManager { get; }
-        public UserManager<IdentityUser> UserManager { get; }
+        public SignInManager<User> SignInManager { get; }
         public ILogger<IAuthenticationService> Logger { get; }
-        public IMapper Mapper { get; }
 
-        public async Task<(bool isAuthenticated, IApiUser user)> LoginAsync(BasicAuthentication authentication)
+        public async Task<(bool isAuthenticated, User user)>
+            LoginAsync(BasicAuthenticationRequest authentication)
         {
             var signinResult = await SignInManager
                 .PasswordSignInAsync(authentication.UserName, authentication.Password, true, true);
 
             if (signinResult.Succeeded)
             {
-                var user = await UserManager.FindByNameAsync(authentication.UserName);
-                var apiUser = Mapper.Map<ApiUser>(user);
-                apiUser.Claims.AddRange(await UserManager.GetClaimsAsync(user));
+                var user = await SignInManager.UserManager.FindByNameAsync(authentication.UserName);
 
-                return (signinResult.Succeeded, apiUser);
+                return (signinResult.Succeeded, user);
             }
             else
             {
@@ -63,9 +58,10 @@ namespace Services.Auth
             }
         }
 
-        public async Task<(bool isAuthenticated, IApiUser user)> LoginAsync(AuthProviders authProvider, ExternalAuthentication authentication)
+        public async Task<(bool isAuthenticated, User user)>
+            LoginAsync(AuthProviders authProvider, ExternalAuthenticationRequest authentication)
         {
-            authProviderMap.TryGetValue(authProvider, out Func<AuthenticationService, ExternalAuthentication, Task<(bool isAuthenticated, string email)>> val);
+            authProviderMap.TryGetValue(authProvider, out Func<AuthenticationService, ExternalAuthenticationRequest, Task<(bool isAuthenticated, string email)>> val);
 
             (bool isAuthenticated, string email) = await val?.Invoke(this, authentication);
 
@@ -75,14 +71,12 @@ namespace Services.Auth
             }
 
             // for now we'll work with email. we may be able to add additional options in the future
-            var user = await UserManager.FindByEmailAsync(email);
-            var apiUser = Mapper.Map<ApiUser>(user);
-            apiUser.Claims.AddRange(await UserManager.GetClaimsAsync(user));
+            var user = await SignInManager.UserManager.FindByEmailAsync(email);
 
-            return (user != null, apiUser);
+            return (user != null, user);
         }
         
-        private async Task<(bool isAuthenticated, string email)> Google(ExternalAuthentication authentication)
+        private async Task<(bool isAuthenticated, string email)> Google(ExternalAuthenticationRequest authentication)
         {
             try
             {

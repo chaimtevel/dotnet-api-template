@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Services.Auth;
 using Services.DbContexts;
 using Shared.Auth;
+using Shared.Models.DB;
 
 namespace Services.Extensions
 {
@@ -28,7 +29,8 @@ namespace Services.Extensions
 
         public static IServiceCollection AddAuthService(this IServiceCollection services)
         {
-            services.AddScoped<IAuthenticationService, AuthenticationService>();
+            services.AddScoped<IAuthenticationService, AuthenticationService>()
+                .AddScoped<IAccountServices, AccountServices>();
 
             return services;
         }
@@ -43,10 +45,12 @@ namespace Services.Extensions
         public static IServiceCollection AddEFCoreIdentity(this IServiceCollection services, IConfiguration configuration)
         {
             // modify for the appropriate db engine
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<ApplicationDbContext>(options => options
+                .UseSqlServer(configuration.GetConnectionString("DefaultConnection"), o => o.EnableRetryOnFailure())
+                .UseLazyLoadingProxies());
 
-            services.AddIdentity<IdentityUser, IdentityRole>()
+            services.AddIdentity<User, Role>()
+                .AddUserManager<AccountServices>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 

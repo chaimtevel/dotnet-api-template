@@ -1,5 +1,4 @@
 ﻿using Api.Auth;
-using Api.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -12,6 +11,10 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Services.Extensions;
 using Shared.Options;
+using Swashbuckle.AspNetCore.Swagger;
+using System.Collections.Generic;
+
+using Newtonsoft.Json;
 
 namespace Api
 {
@@ -28,14 +31,19 @@ namespace Api
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-
-            services.AddRouteOptions();
+                .AddJsonOptions(o =>
+                {
+                    o.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
+                    o.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                    o.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                })
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services.Configure<JwtOptions>(Configuration.GetSection(nameof(JwtOptions)));
 
             services
                 .AddApiServices(Configuration)
+                .AddCors()
                 .AddAuthentication(options =>
                 {
                     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -75,6 +83,22 @@ namespace Api
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Swashbuckle.AspNetCore.Swagger.Info { Title = "My API", Version = "v1" });
+
+                c.AddSecurityDefinition(
+                    "Bearer"
+                    , new ApiKeyScheme
+                    {
+                        In = "header",
+                        Description = "Please insert 'Bearer _token_' into field",
+                        Name = "Authorization",
+                        Type = "apiKey"
+                    });
+
+                c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
+                {
+                    { "Bearer", new string[] { } }
+                });
+
             });
 
         }
@@ -110,6 +134,14 @@ namespace Api
 
                     await c.Response.WriteAsync(serialized);
                 });
+            });
+
+            app.UseCors(b =>
+            {
+                string[] allowedOrigins = Configuration.GetSection("CorsAllowedOrigins").Get<string[]>();
+                b.WithOrigins(allowedOrigins ?? new string[0])
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
             });
 
             app.UseAuthentication()
