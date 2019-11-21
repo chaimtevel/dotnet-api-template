@@ -7,13 +7,20 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using System.Threading;
+using Services.HelperServices;
 
 namespace Services.Auth
 {
+    /// <summary>
+    /// Use this class to customize aspnet identity user manager behavior
+    /// </summary>
     internal class AccountServices : UserManager<User>, IAccountServices
     {
 
-        public AccountServices(IUserStore<User> store
+        public AccountServices(IGenericDataService<User> dataService
+            , IUserStore<User> store
             , IOptions<IdentityOptions> optionsAccessor
             , IPasswordHasher<User> passwordHasher
             , IEnumerable<IPasswordValidator<User>> passwordValidators
@@ -23,21 +30,31 @@ namespace Services.Auth
             , ILogger<UserManager<User>> logger)
             : base(store, optionsAccessor, passwordHasher, new UserValidator<User>[0], passwordValidators, keyNormalizer, errors, services, logger)
         {
-
+            DataService = dataService;
         }
 
-        public override async Task<IList<System.Security.Claims.Claim>> GetClaimsAsync(User user)
+        public IGenericDataService<User> DataService { get; }
+
+        /// <summary>
+        /// We override so that we get claims from both the user and from the users roles
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns>A combined list of claims from the user and from the user roles</returns>
+        public async Task<IEnumerable<Claim>> GetAllClaimsAsync(User user, CancellationToken token)
         {
-            await Task.CompletedTask;
-            return user.Claims.Select(c => new System.Security.Claims.Claim(c.Claim.ClaimType, c.Claim.ClaimValue)).ToList();
-        }
+            var userClaims = await base.GetClaimsAsync(user);
+            
+            var userRoleIds = user.UserRoles.Select(ur => ur.RoleId).ToArray();
+            if(userRoleIds.Any())
+            {
+                var roleClaims = await DataService.AccessData<IdentityRoleClaim<int>>()
+                    .Where(rc => userRoleIds.Contains(rc.RoleId)).ToArrayAsync(token);
 
-        public override async Task<IList<string>> GetRolesAsync(User user)
-        {
-            await Task.CompletedTask;
-            return user.UserRoles.Select(r => r.Role.NormalizedName).ToList();
-        }
+                userClaims = userClaims.Concat(roleClaims.Select(rc => new Claim(rc.ClaimType, rc.ClaimValue))).ToArray();
+            }
 
+            return userClaims;
+        }
 
     }
 }

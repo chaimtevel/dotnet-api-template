@@ -17,36 +17,61 @@ namespace Services.DbContexts
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<User>().ToTable("Users");
-            builder.Entity<Role>().ToTable("Roles");
+            builder.Entity<User>(b =>
+            {
+                b.ToTable("Users");
 
-            // remove the old type mapping first
-            builder.Ignore<IdentityRoleClaim<int>>();
-            builder.Entity<RoleClaim>()
-                .ToTable("RoleClaims")
-                .HasKey(rc => new { rc.RoleID, rc.ClaimID });
+                // Each User can have many UserClaims
+                b.HasMany(e => e.Claims)
+                    .WithOne()
+                    .HasForeignKey(uc => uc.UserId)
+                    .IsRequired();
 
-            // remove the old type mapping first
-            builder.Ignore<IdentityUserClaim<int>>();
-            builder.Entity<UserClaim>()
-                .ToTable("UserClaims")
-                .HasKey(uc => new { uc.UserID, uc.ClaimID });
+                // Each User can have many UserLogins
+                b.HasMany(e => e.Logins)
+                    .WithOne()
+                    .HasForeignKey(ul => ul.UserId)
+                    .IsRequired();
 
-            builder.Ignore<IdentityUserRole<int>>();
-            builder.Entity<UserRole>()
-                .ToTable("UserRoles")
-                .HasKey(ur => new { ur.UserID, ur.RoleID });
+                // Each User can have many UserTokens
+                b.HasMany(e => e.Tokens)
+                    .WithOne()
+                    .HasForeignKey(ut => ut.UserId)
+                    .IsRequired();
 
-            builder.Ignore<IdentityUserLogin<int>>();
-            builder.Entity<UserLogin>()
-                .ToTable("UserLogins")
-                .HasKey(al => new { al.ProviderKey, al.LoginProvider });
+                // Each User can have many entries in the UserRole join table
+                b.HasMany(e => e.UserRoles)
+                    .WithOne()
+                    .HasForeignKey(ur => ur.UserId)
+                    .IsRequired();
+            });
 
-            builder.Ignore<IdentityUserToken<int>>();
-            builder.Entity<UserToken>()
-                .ToTable("UserTokens")
-                .HasKey(at => new { at.UserID, at.LoginProvider, at.Name });
+            builder.Entity<Role>(b =>
+            {
+                b.ToTable("Roles");
 
+                // Each Role can have many entries in the UserRole join table
+                b.HasMany(e => e.UserRoles)
+                    .WithOne()
+                    .HasForeignKey(ur => ur.RoleId)
+                    .IsRequired();
+
+                // Each Role can have many associated RoleClaims
+                b.HasMany(e => e.RoleClaims)
+                    .WithOne()
+                    .HasForeignKey(rc => rc.RoleId)
+                    .IsRequired();
+            });
+
+            builder.Entity<IdentityUserClaim<int>>().ToTable("UserClaims"); ;
+
+            builder.Entity<IdentityUserLogin<int>>().ToTable("UserLogins");
+
+            builder.Entity<IdentityUserToken<int>>().ToTable("UserTokens");
+
+            builder.Entity<IdentityRoleClaim<int>>().ToTable("RoleClaims");
+
+            builder.Entity<IdentityUserRole<int>>().ToTable("UserRoles");
         }
 
     }

@@ -7,7 +7,7 @@ namespace Shared.Models.DB
     {
         public string Description { get; set; }
 
-        public virtual ICollection<UserRole> UserRoles { get; } = new HashSet<UserRole>();
-        public virtual ICollection<RoleClaim> RoleClaims { get; } = new HashSet<RoleClaim>();
+        public virtual ICollection<IdentityUserRole<int>> UserRoles { get; } = new HashSet<IdentityUserRole<int>>();
+        public virtual ICollection<IdentityRoleClaim<int>> RoleClaims { get; } = new HashSet<IdentityRoleClaim<int>>();
     }
 }

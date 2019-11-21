@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Services.Auth;
 using Services.DbContexts;
+using Services.HelperServices;
 using Shared.Auth;
 using Shared.Models.DB;
 
@@ -19,6 +20,7 @@ namespace Services.Extensions
                 .AddJwtService()
                 .AddAuthService()
                 .AddEFCoreIdentity(configuration)
+                .AddScoped(typeof(IGenericDataService<>), typeof(GenericDataService<>))
                 .AddAutoMapper(e =>
                 {
                     e.CreateMap<IdentityUser, ApiUser>(MemberList.None);

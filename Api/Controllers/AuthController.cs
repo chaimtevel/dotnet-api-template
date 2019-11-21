@@ -7,28 +7,36 @@ using Shared.Models.Requests;
 using Shared.Models.Responses;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using System.Linq;
+using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Api.Controllers
 {
     [Route("api/[controller]"), ApiController]
     public class AuthController : Controller
     {
-        public AuthController(IAuthenticationService authenticationService, IJwtService jwtService, ILogger<AuthController> logger)
+        public AuthController(
+            IAuthenticationService authenticationService
+            , IJwtService jwtService
+            , IAccountServices accountServices
+            , ILogger<AuthController> logger)
         {
             AuthenticationService = authenticationService;
             JwtService = jwtService;
+            AccountServices = accountServices;
             Logger = logger;
         }
 
         public IAuthenticationService AuthenticationService { get; }
         public IJwtService JwtService { get; }
+        public IAccountServices AccountServices { get; }
         public ILogger<AuthController> Logger { get; }
 
         [HttpPost("login/{authProvider}")]
-        public async Task<ActionResult<AuthenticationResponse>> Login(AuthProviders authProvider, [FromBody] ExternalAuthenticationRequest authentication)
+        public async Task<ActionResult<AuthenticationResponse>>
+            LoginAsync(AuthProviders authProvider, ExternalAuthenticationRequest authentication, CancellationToken token)
         {
             var (isAuthenticated, user) = await AuthenticationService.LoginAsync(authProvider, authentication);
 
@@ -37,13 +45,14 @@ namespace Api.Controllers
                 return Unauthorized();
             }
 
-            AuthenticationResponse response = PrepareAuthenticationResponse(user);
+            AuthenticationResponse response = await PrepareAuthenticationResponseAsync(user, token);
 
             return Ok(response);
         }
         
         [HttpPost("login/basic")]
-        public async Task<ActionResult<AuthenticationResponse>> Login([FromBody] BasicAuthenticationRequest basicAuth)
+        public async Task<ActionResult<AuthenticationResponse>>
+            LoginAsync([FromBody] BasicAuthenticationRequest basicAuth, CancellationToken token)
         {
             var (isAuthenticated, user) = await AuthenticationService.LoginAsync(basicAuth);
 
@@ -52,12 +61,12 @@ namespace Api.Controllers
                 return Unauthorized();
             }
 
-            AuthenticationResponse response = PrepareAuthenticationResponse(user);
+            AuthenticationResponse response = await PrepareAuthenticationResponseAsync(user, token);
 
             return Ok(response);
         }
 
-        private AuthenticationResponse PrepareAuthenticationResponse(User user)
+        private async Task<AuthenticationResponse> PrepareAuthenticationResponseAsync(User user, CancellationToken token)
         {
             // generate our token
             
@@ -68,13 +77,9 @@ namespace Api.Controllers
                 new System.Security.Claims.Claim(ClaimTypes.NameIdentifier, user.Id.ToString()) // just an example
             };
 
-            var mergedClaims = user
-                .UserRoles
-                .SelectMany(r => r.Role.RoleClaims.Select(c => c.Claim))
-                .Concat(user.Claims.Select(c => c.Claim))
-                .Select(c => new System.Security.Claims.Claim(c.ClaimType, c.ClaimValue));
+            var allClaims = await AccountServices.GetAllClaimsAsync(user, token);
 
-            var ourToken = JwtService.GenerateToken(claims.Concat(mergedClaims).ToArray());
+            var ourToken = JwtService.GenerateToken(claims.Concat(allClaims).ToArray());
 
             return new AuthenticationResponse
             {
