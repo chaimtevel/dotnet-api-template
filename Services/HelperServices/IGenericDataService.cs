@@ -12,7 +12,6 @@ namespace Services.HelperServices
     public interface IDataService
     {
         IQueryable<T> AccessData<T>() where T : class;
-        DbQuery<T> QueryData<T>() where T : class;
         Task LoadDataAsync<T>(CancellationToken token = default) where T : class;
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
         EntityEntry Add(object entity);

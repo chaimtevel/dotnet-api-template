@@ -1,20 +1,16 @@
-﻿using Api.Auth;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
 using Services.Extensions;
 using Shared.Options;
-using Swashbuckle.AspNetCore.Swagger;
-using System.Collections.Generic;
-
-using Newtonsoft.Json;
 
 namespace Api
 {
@@ -30,14 +26,14 @@ namespace Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc()
-                .AddJsonOptions(o =>
+            services.AddMvc(o => o.EnableEndpointRouting = false)
+                .AddNewtonsoftJson(o =>
                 {
                     o.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
                     o.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                     o.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
                 })
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
 
             services.Configure<JwtOptions>(Configuration.GetSection(nameof(JwtOptions)));
 
@@ -52,59 +48,45 @@ namespace Api
                 })
                 .AddJwtBearer(o =>
                 {
-                    // lets not build the main service provider yet (unsure of what the side-affects of doing that are)
-                    ServiceCollection collection = new ServiceCollection();
-                    collection.AddOptions();
-                    collection.Configure<JwtOptions>(Configuration.GetSection(nameof(JwtOptions)));
-                    var sp = collection.BuildServiceProvider();
-                    var options = sp.GetService<IOptions<JwtOptions>>().Value;
+                    var jwtOptions = new JwtOptions();
+                    Configuration.Bind("JwtOptions", jwtOptions);
 
                     o.TokenValidationParameters = new TokenValidationParameters()
                     {
                         ValidateIssuer = true,
-                        ValidIssuer = options.Issuer,
+                        ValidIssuer = jwtOptions.Issuer,
 
                         ValidateAudience = true,
-                        ValidAudience = options.Audience,
+                        ValidAudience = jwtOptions.Audience,
 
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = options.SecretToKey,
+                        IssuerSigningKey = jwtOptions.SecretToKey,
 
                         RequireExpirationTime = true,
                         ValidateLifetime = true
-
                     };
 
                 });
 
-            // allows users not allowed by roles/policies to access their own resources
-            services.AddSingleton<IAuthorizationHandler, OwnerAuthorizationHandler>();
-
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Swashbuckle.AspNetCore.Swagger.Info { Title = "My API", Version = "v1" });
+                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "My API", Version = "v1" });
 
                 c.AddSecurityDefinition(
                     "Bearer"
-                    , new ApiKeyScheme
+                    , new OpenApiSecurityScheme
                     {
-                        In = "header",
+                        In = ParameterLocation.Header,
                         Description = "Please insert 'Bearer _token_' into field",
                         Name = "Authorization",
-                        Type = "apiKey"
+                        Type = SecuritySchemeType.ApiKey
                     });
-
-                c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
-                {
-                    { "Bearer", new string[] { } }
-                });
-
             });
 
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {

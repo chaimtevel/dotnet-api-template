@@ -1,15 +1,15 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Shared.Models.DB;
+using Services.HelperServices;
+using Shared.Models.DB.Identity;
 using System;
 using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
+using SysClaim = System.Security.Claims;
 using System.Threading;
-using Services.HelperServices;
+using System.Threading.Tasks;
 
 namespace Services.Auth
 {
@@ -40,18 +40,12 @@ namespace Services.Auth
         /// </summary>
         /// <param name="user"></param>
         /// <returns>A combined list of claims from the user and from the user roles</returns>
-        public async Task<IEnumerable<Claim>> GetAllClaimsAsync(User user, CancellationToken token)
+        public async Task<IEnumerable<SysClaim.Claim>> GetAllClaimsAsync(User user, CancellationToken token)
         {
             var userClaims = await base.GetClaimsAsync(user);
-            
-            var userRoleIds = user.UserRoles.Select(ur => ur.RoleId).ToArray();
-            if(userRoleIds.Any())
-            {
-                var roleClaims = await DataService.AccessData<IdentityRoleClaim<int>>()
-                    .Where(rc => userRoleIds.Contains(rc.RoleId)).ToArrayAsync(token);
 
-                userClaims = userClaims.Concat(roleClaims.Select(rc => new Claim(rc.ClaimType, rc.ClaimValue))).ToArray();
-            }
+            userClaims = userClaims.Concat(user.UserRoles.SelectMany(ur => ur.Role.RoleClaims)
+                .Select(rc => new SysClaim.Claim(rc.Claim.ClaimType, rc.Claim.ClaimValue))).ToArray();
 
             return userClaims;
         }

@@ -7,7 +7,7 @@ using Services.Auth;
 using Services.DbContexts;
 using Services.HelperServices;
 using Shared.Auth;
-using Shared.Models.DB;
+using Shared.Models.DB.Identity;
 
 namespace Services.Extensions
 {

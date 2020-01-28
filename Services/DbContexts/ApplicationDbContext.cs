@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Shared.Models.DB;
+using Shared.Models.DB.Identity;
 
 namespace Services.DbContexts
 {
@@ -17,61 +18,21 @@ namespace Services.DbContexts
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<User>(b =>
-            {
-                b.ToTable("Users");
+            builder.Entity<Claim>();
 
-                // Each User can have many UserClaims
-                b.HasMany(e => e.Claims)
-                    .WithOne()
-                    .HasForeignKey(uc => uc.UserId)
-                    .IsRequired();
+            builder.Entity<User>();
 
-                // Each User can have many UserLogins
-                b.HasMany(e => e.Logins)
-                    .WithOne()
-                    .HasForeignKey(ul => ul.UserId)
-                    .IsRequired();
+            builder.Entity<Role>();
 
-                // Each User can have many UserTokens
-                b.HasMany(e => e.Tokens)
-                    .WithOne()
-                    .HasForeignKey(ut => ut.UserId)
-                    .IsRequired();
+            builder.Entity<UserClaim>();
 
-                // Each User can have many entries in the UserRole join table
-                b.HasMany(e => e.UserRoles)
-                    .WithOne()
-                    .HasForeignKey(ur => ur.UserId)
-                    .IsRequired();
-            });
+            builder.Entity<UserLogin>();
 
-            builder.Entity<Role>(b =>
-            {
-                b.ToTable("Roles");
+            builder.Entity<UserToken>();
 
-                // Each Role can have many entries in the UserRole join table
-                b.HasMany(e => e.UserRoles)
-                    .WithOne()
-                    .HasForeignKey(ur => ur.RoleId)
-                    .IsRequired();
+            builder.Entity<RoleClaim>();
 
-                // Each Role can have many associated RoleClaims
-                b.HasMany(e => e.RoleClaims)
-                    .WithOne()
-                    .HasForeignKey(rc => rc.RoleId)
-                    .IsRequired();
-            });
-
-            builder.Entity<IdentityUserClaim<int>>().ToTable("UserClaims"); ;
-
-            builder.Entity<IdentityUserLogin<int>>().ToTable("UserLogins");
-
-            builder.Entity<IdentityUserToken<int>>().ToTable("UserTokens");
-
-            builder.Entity<IdentityRoleClaim<int>>().ToTable("RoleClaims");
-
-            builder.Entity<IdentityUserRole<int>>().ToTable("UserRoles");
+            builder.Entity<UserRole>();
         }
 
     }

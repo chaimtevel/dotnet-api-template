@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Services.Auth;
 using Shared.Auth;
-using Shared.Models.DB;
+using Shared.Models.DB.Identity;
 using Shared.Models.Requests;
 using Shared.Models.Responses;
 using System.Collections.Generic;
