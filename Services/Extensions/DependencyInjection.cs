@@ -51,8 +51,12 @@ namespace Services.Extensions
                 .UseSqlServer(configuration.GetConnectionString("DefaultConnection"), o => o.EnableRetryOnFailure())
                 .UseLazyLoadingProxies());
 
+            // IUserClaimsPrincipalFactory<User> b;
+            
+
             services.AddIdentity<User, Role>()
                 .AddUserManager<AccountServices>()
+                .AddUserStore<UserStore>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 

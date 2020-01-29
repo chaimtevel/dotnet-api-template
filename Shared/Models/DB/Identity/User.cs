@@ -6,7 +6,6 @@ using System.Text;
 
 namespace Shared.Models.DB.Identity
 {
-    [Table("Users")]
     public class User : IdentityUser<int>
     {
         public virtual ICollection<UserClaim> Claims { get; set; } = new HashSet<UserClaim>();

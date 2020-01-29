@@ -1,5 +1,8 @@
-﻿namespace Shared.Models.DB.Identity
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Shared.Models.DB.Identity
 {
+    [Table("Claims")]
     public class Claim
     {
         public int ID { get; set; }

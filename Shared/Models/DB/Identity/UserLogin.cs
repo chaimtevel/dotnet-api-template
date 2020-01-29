@@ -9,6 +9,8 @@ namespace Shared.Models.DB.Identity
     [Table("UserLogins")]
     public class UserLogin
     {
+        public int ID { get; set; }
+
         public int UserID { get; set; }
         public virtual User User { get; set; }
 
