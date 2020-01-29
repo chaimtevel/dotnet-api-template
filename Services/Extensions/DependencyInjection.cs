@@ -7,7 +7,7 @@ using Services.Auth;
 using Services.DbContexts;
 using Services.HelperServices;
 using Shared.Auth;
-using Shared.Models.DB;
+using Shared.Models.DB.Identity;
 
 namespace Services.Extensions
 {
@@ -51,8 +51,12 @@ namespace Services.Extensions
                 .UseSqlServer(configuration.GetConnectionString("DefaultConnection"), o => o.EnableRetryOnFailure())
                 .UseLazyLoadingProxies());
 
+            // IUserClaimsPrincipalFactory<User> b;
+            
+
             services.AddIdentity<User, Role>()
                 .AddUserManager<AccountServices>()
+                .AddUserStore<UserStore>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 

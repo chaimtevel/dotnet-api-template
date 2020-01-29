@@ -1,5 +1,5 @@
 ﻿using Shared.Auth;
-using Shared.Models.DB;
+using Shared.Models.DB.Identity;
 using Shared.Models.Requests;
 using System.Threading.Tasks;
 

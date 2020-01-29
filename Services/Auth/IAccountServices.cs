@@ -1,8 +1,6 @@
-﻿using Shared.Models.DB;
-using System;
+﻿using Shared.Models.DB.Identity;
 using System.Collections.Generic;
-using System.Security.Claims;
-using System.Text;
+using SysClaims = System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,6 +8,6 @@ namespace Services.Auth
 {
     public interface IAccountServices
     {
-        Task<IEnumerable<Claim>> GetAllClaimsAsync(User user, CancellationToken token);
+        Task<IEnumerable<SysClaims.Claim>> GetAllClaimsAsync(User user, CancellationToken token);
     }
 }

@@ -6,6 +6,6 @@ namespace Shared.Auth
 {
     public enum AuthProviders
     {
-        Google
+        Google, Internal
     }
 }

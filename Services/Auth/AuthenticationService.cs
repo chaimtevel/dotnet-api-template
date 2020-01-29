@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Shared.Auth;
 using Shared.Models.DB;
+using Shared.Models.DB.Identity;
 using Shared.Models.Requests;
 using Shared.Options;
 using System;
@@ -19,7 +20,7 @@ namespace Services.Auth
 
     internal class AuthenticationService : IAuthenticationService
     {
-        private static AuthProviderMap authProviderMap = new AuthProviderMap()
+        private static readonly AuthProviderMap authProviderMap = new AuthProviderMap()
         {
             { AuthProviders.Google, (s, a) => s.Google(a) }
         };

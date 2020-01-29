@@ -24,8 +24,6 @@ namespace Services.HelperServices
 
         public IQueryable<T> AccessData<T>() where T : class => DbContext.Set<T>();
 
-        public DbQuery<T> QueryData<T>() where T : class => DbContext.Query<T>();
-
         public Task LoadDataAsync<T>(CancellationToken token = default) where T : class
             => DbContext.Set<T>().LoadAsync();
 
