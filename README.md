@@ -1,6 +1,6 @@
 ### Environment
 
-This app runs on dotnet 2.2 so the SDK needs to be installed on the machine before developing/running this app.
+This app runs on dotnet 3.1 so the SDK needs to be installed on the machine before developing/running this app.
 
 
 This template has the following setup.
