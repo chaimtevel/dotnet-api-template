@@ -1,4 +1,4 @@
-﻿using Gelf.Extensions.Logging;
+using Gelf.Extensions.Logging;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +15,7 @@ namespace Api
             CreateBuildWebHost(args).Build().Run();
         }
         public static IHostBuilder CreateBuildWebHost(string[] args) =>
+            // https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-3.1#default-builder-settings
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
