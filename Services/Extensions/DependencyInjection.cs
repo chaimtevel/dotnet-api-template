@@ -23,8 +23,8 @@ namespace Services.Extensions
                 .AddScoped(typeof(IGenericDataService<>), typeof(GenericDataService<>))
                 .AddAutoMapper(e =>
                 {
-                    e.CreateMap<IdentityUser, ApiUser>(MemberList.None);
-                });
+                    
+                }, typeof(DependencyInjection).Assembly);
 
             return services;
         }
