@@ -75,16 +75,31 @@ namespace Api
             {
                 c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "My API", Version = "v1" });
 
-                c.AddSecurityDefinition(
-                    "Bearer"
-                    , new OpenApiSecurityScheme
+                var bearerSchemeName = "Bearer";
+
+                var scheme = new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Description = "Please insert 'Bearer _token_' into field",
+                    Name = "Authorization",
+                    Scheme = bearerSchemeName,
+                    BearerFormat = "JWT",
+                    Type = SecuritySchemeType.ApiKey,
+                    Reference = new OpenApiReference
                     {
-                        In = ParameterLocation.Header,
-                        Description = "Please insert 'Bearer _token_' into field",
-                        Name = "Authorization",
-                        Type = SecuritySchemeType.ApiKey
-                    });
-            });
+                        Id = bearerSchemeName,
+                        Type = ReferenceType.SecurityScheme
+                    }
+                };
+
+                c.AddSecurityDefinition(bearerSchemeName, scheme);
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    { scheme, new string[0] }
+                });
+            })
+            .AddSwaggerGenNewtonsoftSupport();
 
         }
 
