@@ -29,7 +29,7 @@ namespace Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc(o => o.EnableEndpointRouting = false)
+            services.AddMvc()
                 .AddNewtonsoftJson(o =>
                 {
                     o.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
@@ -117,6 +117,23 @@ namespace Api
 
             app.UseHttpsRedirection();
 
+            app.UseRouting();
+
+            app.UseCors(b =>
+            {
+                string[] allowedOrigins = Configuration.GetSection("CorsAllowedOrigins").Get<string[]>();
+                b.WithOrigins(allowedOrigins ?? new string[0])
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+
+            app.UseAuthentication()
+                .UseSwagger()
+                .UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                });
+
             app.UseExceptionHandler(a =>
             {
                 a.Run(async c =>
@@ -136,21 +153,10 @@ namespace Api
                 });
             });
 
-            app.UseCors(b =>
+            app.UseEndpoints(b =>
             {
-                string[] allowedOrigins = Configuration.GetSection("CorsAllowedOrigins").Get<string[]>();
-                b.WithOrigins(allowedOrigins ?? new string[0])
-                    .AllowAnyMethod()
-                    .AllowAnyHeader();
+                b.MapControllers();
             });
-
-            app.UseAuthentication()
-                .UseMvc()
-                .UseSwagger()
-                .UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-                });
 
         }
     }

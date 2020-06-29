@@ -23,14 +23,11 @@ namespace Api
                 })
                 .ConfigureLogging((c, b) =>
                 {
-                    b.AddConfiguration(c.Configuration.GetSection("Logging"))
-                        .AddConsole();
+                    b.AddConsole();
 
                     bool debugGraylog = c.Configuration.GetValue<bool>("Logging:GELF:DebugGraylog", false);
                     if (!c.HostingEnvironment.IsDevelopment() || debugGraylog)
                     {
-                        b.Services.Configure<GelfLoggerOptions>(c.Configuration.GetSection("Logging:GELF"));
-
                         b.AddGelf(o =>
                         {
                             o.LogSource = System.Environment.MachineName;
