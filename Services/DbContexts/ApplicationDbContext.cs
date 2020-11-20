@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Shared.Models.DB.Identity;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace Services.DbContexts
 {
@@ -15,9 +17,23 @@ namespace Services.DbContexts
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            // set the default type for string to be VARCHAR(50)
+            var stringType = typeof(string);
+            var columnAtribute = typeof(ColumnAttribute);
+            foreach (var property in builder.Model.GetEntityTypes()
+                .SelectMany(t => t.GetProperties())
+                .Where(p => p.ClrType == stringType))
+            {
+                if (property.GetMaxLength() == null && !property.PropertyInfo.GetCustomAttributes(columnAtribute, true).Any())
+                {
+                    property.SetColumnType("VARCHAR(50)");
+                    property.SetMaxLength(50);
+                }
+            }
+
             base.OnModelCreating(builder);
 
-            // remove undused entities
+            // remove unused entities
             builder.Ignore<IdentityRoleClaim<int>>();
             builder.Ignore<IdentityUserClaim<int>>();
             builder.Ignore<IdentityUserRole<int>>();
@@ -42,6 +58,15 @@ namespace Services.DbContexts
 
             builder.Entity<UserRole>()
                 .HasKey(ur => new { ur.UserID, ur.RoleID });
+
+            #region type mappings
+
+            builder.Entity<User>()
+                .Property(u => u.PasswordHash)
+                .HasColumnType("VARCHAR(100)");
+
+            #endregion
+
         }
 
     }
