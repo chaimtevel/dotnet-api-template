@@ -12,8 +12,8 @@ namespace Shared.Extensions
         public static AuthenticatedUser ToAuthenticatedUser(this ClaimsPrincipal principal)
             => new AuthenticatedUser(principal);
 
-        public static AuthenticatedUser ToApiUser(this ControllerBase controller) => ToAuthenticatedUser(controller.User);
-        public static AuthenticatedUser ToApiUser(this HttpContext context) => ToAuthenticatedUser(context.User);
+        public static AuthenticatedUser ToAuthenticatedUser(this ControllerBase controller) => ToAuthenticatedUser(controller.User);
+        public static AuthenticatedUser ToAuthenticatedUser(this HttpContext context) => ToAuthenticatedUser(context.User);
 
     }
 }
