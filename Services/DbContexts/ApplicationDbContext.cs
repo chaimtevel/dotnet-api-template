@@ -27,7 +27,6 @@ namespace Services.DbContexts
                 if (property.GetMaxLength() == null && !property.PropertyInfo.GetCustomAttributes(columnAtribute, true).Any())
                 {
                     property.SetColumnType("VARCHAR(50)");
-                    property.SetMaxLength(50);
                 }
             }
 

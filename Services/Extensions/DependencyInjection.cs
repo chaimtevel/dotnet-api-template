@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Services.Auth;
 using Services.DbContexts;
 using Services.HelperServices;
-using Shared.Auth;
 using Shared.Models.DB.Identity;
 
 namespace Services.Extensions
@@ -47,7 +46,7 @@ namespace Services.Extensions
         public static IServiceCollection AddEFCoreIdentity(this IServiceCollection services, IConfiguration configuration)
         {
             // modify for the appropriate db engine
-            services.AddDbContext<ApplicationDbContext>(options => options
+            services.AddDbContextPool<ApplicationDbContext>(options => options
                 .UseSqlServer(configuration.GetConnectionString("DefaultConnection"), o => o.EnableRetryOnFailure())
                 .UseLazyLoadingProxies());
 

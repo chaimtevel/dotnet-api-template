@@ -9,18 +9,11 @@ namespace Shared.Extensions
     public static class UserExtensions
     {
 
-        public static IApiUser ToApiUser(this ClaimsPrincipal principal)
-        {
-            return new ApiUser
-            {
-                ID = new Guid(principal.FindFirstValue(ClaimTypes.NameIdentifier)),
-                Email = principal.FindFirstValue(ClaimTypes.Email),
-                UserName = principal.FindFirstValue(ClaimTypes.Name)
-            };
-        }
+        public static AuthenticatedUser ToAuthenticatedUser(this ClaimsPrincipal principal)
+            => new AuthenticatedUser(principal);
 
-        public static IApiUser ToApiUser(this ControllerBase controller) => ToApiUser(controller.User);
-        public static IApiUser ToApiUser(this HttpContext context) => ToApiUser(context.User);
+        public static AuthenticatedUser ToApiUser(this ControllerBase controller) => ToAuthenticatedUser(controller.User);
+        public static AuthenticatedUser ToApiUser(this HttpContext context) => ToAuthenticatedUser(context.User);
 
     }
 }
