@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Shared.Models.DB.Identity;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using static Services.Extensions.EfExtensions;
 
 namespace Services.DbContexts
 {
@@ -32,31 +33,7 @@ namespace Services.DbContexts
 
             base.OnModelCreating(builder);
 
-            // remove unused entities
-            builder.Ignore<IdentityRoleClaim<int>>();
-            builder.Ignore<IdentityUserClaim<int>>();
-            builder.Ignore<IdentityUserRole<int>>();
-            builder.Ignore<IdentityUserLogin<int>>();
-            builder.Ignore<IdentityUserToken<int>>();
-
-            builder.Entity<Claim>();
-
-            builder.Entity<User>().ToTable("Users");
-
-            builder.Entity<Role>().ToTable("Roles");
-
-            builder.Entity<UserClaim>()
-                .HasKey(uc => new { uc.UserID, uc.ClaimID });
-
-            builder.Entity<UserLogin>();
-
-            builder.Entity<UserToken>();
-
-            builder.Entity<RoleClaim>()
-                .HasKey(rc => new { rc.RoleID, rc.ClaimID });
-
-            builder.Entity<UserRole>()
-                .HasKey(ur => new { ur.UserID, ur.RoleID });
+            builder.ConfigureAspNetIdentity();
 
             #region type mappings
 
@@ -66,6 +43,8 @@ namespace Services.DbContexts
 
             #endregion
 
+            // this should be done after the whole model has been built
+            builder.SetDefaultStringDbType();
         }
 
     }
