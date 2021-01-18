@@ -18,19 +18,6 @@ namespace Services.DbContexts
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            // set the default type for string to be VARCHAR(50)
-            var stringType = typeof(string);
-            var columnAtribute = typeof(ColumnAttribute);
-            foreach (var property in builder.Model.GetEntityTypes()
-                .SelectMany(t => t.GetProperties())
-                .Where(p => p.ClrType == stringType))
-            {
-                if (property.GetMaxLength() == null && !property.PropertyInfo.GetCustomAttributes(columnAtribute, true).Any())
-                {
-                    property.SetColumnType("VARCHAR(50)");
-                }
-            }
-
             base.OnModelCreating(builder);
 
             builder.ConfigureAspNetIdentity();
