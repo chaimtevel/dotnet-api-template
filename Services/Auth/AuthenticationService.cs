@@ -1,16 +1,13 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Shared.Auth;
-using Shared.Models.DB;
 using Shared.Models.DB.Identity;
 using Shared.Models.Requests;
 using Shared.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using static Google.Apis.Auth.GoogleJsonWebSignature;
 
@@ -25,18 +22,18 @@ namespace Services.Auth
             { AuthProviders.Google, (s, a) => s.Google(a) }
         };
 
-        public AuthenticationService(IOptions<JwtOptions> jwtOptions
+        public AuthenticationService(IOptions<GoogleOptions> googleOptions
             , IJwtService jwtService
             , SignInManager<User> signInManager
             , ILogger<IAuthenticationService> logger)
         {
-            JwtOptions = jwtOptions;
+            GoogleOptions = googleOptions;
             JwtService = jwtService;
             SignInManager = signInManager;
             Logger = logger;
         }
 
-        public IOptions<JwtOptions> JwtOptions { get; }
+        public IOptions<GoogleOptions> GoogleOptions { get; }
         public IJwtService JwtService { get; }
         public SignInManager<User> SignInManager { get; }
         public ILogger<IAuthenticationService> Logger { get; }
@@ -82,7 +79,7 @@ namespace Services.Auth
             try
             {
                 Payload tokenInfo = await ValidateAsync(authentication.Token);
-                if (tokenInfo != null || !tokenInfo.AudienceAsList.Contains(JwtOptions.Value.ClientId, StringComparer.OrdinalIgnoreCase))
+                if (tokenInfo != null || !tokenInfo.AudienceAsList.Contains(GoogleOptions.Value.ClientID, StringComparer.OrdinalIgnoreCase))
                 {
                     return (true, tokenInfo.Email);
                 }

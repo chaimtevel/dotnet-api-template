@@ -50,11 +50,14 @@ namespace Services.Extensions
                 .UseSqlServer(configuration.GetConnectionString("DefaultConnection"), o => o.EnableRetryOnFailure())
                 .UseLazyLoadingProxies());
 
-            services.AddIdentity<User, Role>()
-                .AddUserManager<AccountServices>()
-                .AddUserStore<UserStore>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
+            services.AddIdentity<User, Role>(o =>
+            {
+                o.Password.RequiredLength = 8;
+            })
+            .AddUserManager<AccountServices>()
+            .AddUserStore<UserStore>()
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
 
             return services;
         }
