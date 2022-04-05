@@ -27,6 +27,9 @@ public static class DependencyInjection
             .AddScoped(typeof(IGenericDataService<>), typeof(GenericDataService<>))
             .AddMapster(new[] { apiAssembly, typeof(MapsterGenericRegister).Assembly });
 
+        // for a generic template this is good enough. Once its implemented this would need to be adjusted accordingly
+        services.AddHttpClient<IMessagingService, MessagingService>();
+
         return services;
     }
 
