@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Api.Attributes;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Services.Auth;
 using Services.HelperServices;
 using Shared.Auth;
@@ -8,6 +10,7 @@ using Shared.Models.Responses;
 using System.IdentityModel.Tokens.Jwt;
 using static Services.Extensions.MessagingExtensions;
 using static Shared.Constants.Permissions;
+using static Shared.Constants.Validation;
 using static Shared.Extensions.StringExtensions;
 using static Shared.Extensions.UserExtensions;
 using static Shared.Extensions.ValidationExtensions;
@@ -17,8 +20,7 @@ namespace Api.Controllers;
 [Route("api/[controller]"), ApiController]
 public class AuthController : Controller
 {
-    public AuthController(
-        IAuthenticationService authenticationService
+    public AuthController(IAuthenticationService authenticationService
         , IJwtService jwtService
         , IAccountServices accountServices
         , ILogger<AuthController> logger)
@@ -78,6 +80,53 @@ public class AuthController : Controller
         }
 
         return Ok(response);
+    }
+
+    [HttpGet("sendMfa"), Authorize, MfaAuthorize]
+    public async Task<ActionResult<AuthenticationResponse>> SendMfaCodeAsync([FromServices] IMessagingService messagingService
+        , CancellationToken token)
+    {
+        var authUser = this.ToAuthenticatedUser();
+        var (code, user) = await AuthenticationService.GenerateMfaCodeAsync(authUser.Email);
+
+        if (user == null)
+        {
+            var (validationCode, message) = NoUserWithThatEmailFound;
+            ModelState.AddModelError(validationCode, string.Format(message, authUser.Email));
+            return BadRequest(ModelState);
+        }
+
+        var (validation, maskedSentToValue) = await messagingService.SendMfaMessageAsync(user, code, Logger, token);
+
+        if (!validation.IsValid) { return BadRequest(validation.CopyToModelState(ModelState)); }
+
+        AuthenticationResponse response = PrepareAuthenticationResponseForMFAAsync(user, maskedSentToValue);
+
+        return Ok(response);
+    }
+
+    [HttpGet("verifyMfa"), Authorize, MfaAuthorize]
+    public async Task<ActionResult<AuthenticationResponse>> VerifyMfaAsync([FromQuery] VerifyMfaRequest request
+        , CancellationToken token)
+    {
+        var authUser = this.ToAuthenticatedUser();
+        var (isVerified, validation, user) = await AuthenticationService.VerifyMfaAsync(request, authUser.Email);
+
+        if (!validation.IsValid)
+        {
+            return BadRequest(validation.CopyToModelState(ModelState));
+        }
+        else if (!isVerified)
+        {
+            ModelState.AddModelError("InvalidMfaCode", "Unable to verify this Mfa code");
+            return BadRequest(ModelState);
+        }
+        else
+        {
+            AuthenticationResponse response = await PrepareAuthenticationResponseAsync(user, token);
+
+            return Ok(response);
+        }
     }
 
     private async Task<AuthenticationResponse> PrepareAuthenticationResponseAsync(User user, CancellationToken token)

@@ -12,4 +12,10 @@ public static class MessagingExtensions
     {
         throw new NotImplementedException();
     }
+
+    public static Task SendResetPasswordEmailAsync(this IMessagingService messagingService
+        , string domain, string resetPwToken, string email, CancellationToken token)
+    {
+        throw new NotImplementedException();
+    }
 }

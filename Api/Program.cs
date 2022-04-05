@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Shared.Options;
+using static Api.Extensions.PermissionExtensions;
 using static Services.Extensions.DependencyInjection;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,7 +38,6 @@ internal static class StartupMethods
         services.Configure<JwtOptions>(configuration.GetSection(nameof(JwtOptions)));
 
         services
-            .AddApiServices(configuration, typeof(StartupMethods).Assembly)
             .AddCors()
             .AddAuthentication(options =>
             {
@@ -63,7 +64,6 @@ internal static class StartupMethods
                     RequireExpirationTime = true,
                     ValidateLifetime = true
                 };
-
             });
 
         services.AddSwaggerGen(c =>
@@ -95,6 +95,10 @@ internal static class StartupMethods
                 });
         })
         .AddSwaggerGenNewtonsoftSupport();
+
+        // helper service methods
+        services.AddApiServices(configuration, typeof(StartupMethods).Assembly)
+            .AddApiAuthorization();
 
         return services;
     }

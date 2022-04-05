@@ -1,8 +1,6 @@
 ﻿using Shared.Constants;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
+using static Shared.Extensions.ParsingExtensions;
 
 namespace Shared.Auth
 {
@@ -29,7 +27,12 @@ namespace Shared.Auth
         }
 
         public string Email => Principal.FindFirstValue(ClaimTypes.Email);
-        public string UserName => Principal?.Identity?.Name;
+        public string? UserName => Principal?.Identity?.Name;
+
+        public bool RequiresMfaClaim => (Principal
+            .FindFirstValue(Permissions.RequiresMfaClaim)
+            ?.ToBool())
+            .GetValueOrDefault();
 
         public IEnumerable<string> PermissionClaims => Principal
             .Claims
