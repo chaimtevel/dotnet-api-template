@@ -1,15 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Services.HelperServices;
 using Shared.Models.DB.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using SysClaim = System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Services.Auth
 {
@@ -28,7 +22,7 @@ namespace Services.Auth
             , IdentityErrorDescriber errors
             , IServiceProvider services
             , ILogger<UserManager<User>> logger)
-            : base(store, optionsAccessor, passwordHasher, new UserValidator<User>[0], passwordValidators, keyNormalizer, errors, services, logger)
+            : base(store, optionsAccessor, passwordHasher, Array.Empty<UserValidator<User>>(), passwordValidators, keyNormalizer, errors, services, logger)
         {
             DataService = dataService;
         }

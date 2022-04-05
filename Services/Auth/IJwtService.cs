@@ -1,11 +1,9 @@
-﻿using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
-namespace Services.Auth
+namespace Services.Auth;
+
+public interface IJwtService
 {
-    public interface IJwtService
-    {
-        JwtSecurityToken GenerateToken(IEnumerable<Claim> claims);
-    }
+    JwtSecurityToken GenerateToken(IEnumerable<Claim> claims);
 }

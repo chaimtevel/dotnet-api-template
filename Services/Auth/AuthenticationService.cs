@@ -5,10 +5,6 @@ using Shared.Auth;
 using Shared.Models.DB.Identity;
 using Shared.Models.Requests;
 using Shared.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using static Google.Apis.Auth.GoogleJsonWebSignature;
 
 namespace Services.Auth
@@ -38,7 +34,8 @@ namespace Services.Auth
         public SignInManager<User> SignInManager { get; }
         public ILogger<IAuthenticationService> Logger { get; }
 
-        public async Task<(bool isAuthenticated, User user)>
+
+        public async Task<(bool isAuthenticated, User? user)>
             LoginAsync(BasicAuthenticationRequest authentication)
         {
             var signinResult = await SignInManager
@@ -56,12 +53,18 @@ namespace Services.Auth
             }
         }
 
-        public async Task<(bool isAuthenticated, User user)>
+        public async Task<(bool isAuthenticated, User? user)>
             LoginAsync(AuthProviders authProvider, ExternalAuthenticationRequest authentication)
         {
-            authProviderMap.TryGetValue(authProvider, out Func<AuthenticationService, ExternalAuthenticationRequest, Task<(bool isAuthenticated, string email)>> val);
+            authProviderMap.TryGetValue(authProvider, out var val);
 
-            (bool isAuthenticated, string email) = await val?.Invoke(this, authentication);
+            bool isAuthenticated = false;
+            string email = string.Empty;
+
+            if(val is not null)
+            {
+                (isAuthenticated, email) = await val.Invoke(this, authentication);
+            }
 
             if(!isAuthenticated)
             {
@@ -79,7 +82,7 @@ namespace Services.Auth
             try
             {
                 Payload tokenInfo = await ValidateAsync(authentication.Token);
-                if (tokenInfo != null || !tokenInfo.AudienceAsList.Contains(GoogleOptions.Value.ClientID, StringComparer.OrdinalIgnoreCase))
+                if (tokenInfo != null && tokenInfo.AudienceAsList.Contains(GoogleOptions.Value.ClientID, StringComparer.OrdinalIgnoreCase))
                 {
                     return (true, tokenInfo.Email);
                 }

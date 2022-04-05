@@ -5,10 +5,10 @@ namespace Shared.Options;
 
 public class JwtOptions
 {
-    public string Issuer { get; set; }
-    public string Audience { get; set; }
-    public string JwtSecret { get; set; }
-    public int TokenDurationInMinutes { get; set; }
+    public string Issuer { get; init; } = string.Empty;
+    public string Audience { get; init; } = string.Empty;
+    public string JwtSecret { get; init; } = string.Empty;
+    public int TokenDurationInMinutes { get; init; }
 
     public SymmetricSecurityKey SecretToKey => new(Encoding.UTF8.GetBytes(JwtSecret));
 

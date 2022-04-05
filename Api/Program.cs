@@ -1,12 +1,5 @@
 using Gelf.Extensions.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Shared.Options;
@@ -25,6 +18,8 @@ app.BuildApp(app.Configuration, app.Environment);
 
 app.Run();
 
+
+
 internal static class StartupMethods
 {
     public static IServiceCollection BuildServices(this IServiceCollection services, IConfiguration configuration)
@@ -41,7 +36,7 @@ internal static class StartupMethods
         services.Configure<JwtOptions>(configuration.GetSection(nameof(JwtOptions)));
 
         services
-            .AddApiServices(configuration)
+            .AddApiServices(configuration, typeof(StartupMethods).Assembly)
             .AddCors()
             .AddAuthentication(options =>
             {
@@ -138,8 +133,8 @@ internal static class StartupMethods
 
         app.UseCors(b =>
         {
-            string[] allowedOrigins = configuration.GetSection("CorsAllowedOrigins").Get<string[]>();
-            b.WithOrigins(allowedOrigins ?? System.Array.Empty<string>())
+            string[] allowedOrigins = configuration.GetSection("CorsAllowedOrigins").Get<string[]>() ?? System.Array.Empty<string>();
+            b.WithOrigins(allowedOrigins)
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 // this allows the client to send cookies for things such as 2fa
@@ -181,35 +176,3 @@ internal static class StartupMethods
         return app;
     }
 }
-
-//namespace Api
-//{
-//    public class Program
-//    {
-//        public static void Main(string[] args)
-//        {
-//            CreateBuildWebHost(args).Build().Run();
-//        }
-
-//        public static IHostBuilder CreateBuildWebHost(string[] args) =>
-//            Host.CreateDefaultBuilder(args)
-//                .ConfigureWebHostDefaults(webBuilder =>
-//                {
-//                    webBuilder.UseStartup<Startup>();
-//                })
-//                .ConfigureLogging((c, b) =>
-//                {
-//                    b.AddConsole();
-
-//                    bool debugGraylog = c.Configuration.GetValue<bool>("Logging:GELF:DebugGraylog", false);
-//                    if (!c.HostingEnvironment.IsDevelopment() || debugGraylog)
-//                    {
-//                        b.AddGelf(o =>
-//                        {
-//                            o.LogSource = System.Environment.MachineName;
-//                            o.AdditionalFields.Add("environment", c.HostingEnvironment.EnvironmentName);
-//                        });
-//                    }
-//                });
-//    }
-//}

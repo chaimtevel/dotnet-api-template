@@ -3,12 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Services.HelperServices;
 using Shared.Auth;
 using Shared.Models.DB.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Services.Auth
 {
@@ -76,6 +70,7 @@ namespace Services.Auth
             {
                 return mergedCodes.Split(';').Length;
             }
+
             return 0;
         }
 
@@ -99,34 +94,34 @@ namespace Services.Auth
         }
 
         public Task<User> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
-            => DataService.AccessData<User>().FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken);
+            => DataService.AccessData<User>().FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken)!;
 
         public Task<User> FindByIdAsync(string userId, CancellationToken cancellationToken)
         {
             if(!int.TryParse(userId, out int intUserId))
             {
-                return Task.FromResult(null as User);
+                return Task.FromResult(null as User)!;
             }
 
-            return DataService.AccessData<User>().FirstOrDefaultAsync(u => u.Id == intUserId, cancellationToken);
+            return DataService.AccessData<User>().FirstOrDefaultAsync(u => u.Id == intUserId, cancellationToken)!;
         }
 
         public async Task<User> FindByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
         {
             if (!Enum.TryParse(loginProvider, out AuthProviders authProvider))
             {
-                return null;
+                return null!;
             }
 
             var userLogin = await DataService.AccessData<UserLogin>()
                 .Include(ul => ul.User)
                 .FirstOrDefaultAsync(ul => ul.LoginProvider == authProvider && ul.ProviderKey == providerKey, cancellationToken);
 
-            return userLogin?.User;
+            return userLogin?.User!;
         }
 
-        public Task<User> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
-            => DataService.AccessData<User>().FirstOrDefaultAsync(u => u.NormalizedUserName == normalizedUserName, cancellationToken);
+        public Task<User> FindByNameAsync(string normalizedUserName, CancellationToken token)
+            => DataService.AccessData<User>().FirstOrDefaultAsync(u => u.NormalizedUserName == normalizedUserName, token)!;
 
         public Task<int> GetAccessFailedCountAsync(User user, CancellationToken cancellationToken)
             => Task.FromResult(user.AccessFailedCount);
@@ -212,13 +207,13 @@ namespace Services.Auth
         {
             if (!Enum.TryParse(loginProvider, out AuthProviders authProvider))
             {
-                return null;
+                return null!;
             }
 
             return DataService.AccessData<UserToken>()
                 .Where(ut => ut.UserID == user.Id && ut.LoginProvider == authProvider && ut.Name == name)
                 .Select(ut => ut.Value)
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken)!;
         }
 
         public Task<bool> GetTwoFactorEnabledAsync(User user, CancellationToken cancellationToken)
