@@ -2,5 +2,5 @@
 
 public class GoogleOptions
 {
-    public string ClientID { get; init; }
+    public string ClientID { get; init; } = string.Empty;
 }

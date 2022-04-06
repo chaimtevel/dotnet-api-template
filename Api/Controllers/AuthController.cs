@@ -42,7 +42,7 @@ public class AuthController : Controller
     {
         var (isAuthenticated, user) = await AuthenticationService.LoginAsync(authProvider, authentication);
 
-        if (!isAuthenticated)
+        if (!isAuthenticated || user is null)
         {
             return Unauthorized();
         }
@@ -112,7 +112,7 @@ public class AuthController : Controller
         var authUser = this.ToAuthenticatedUser();
         var (isVerified, validation, user) = await AuthenticationService.VerifyMfaAsync(request, authUser.Email);
 
-        if (!validation.IsValid)
+        if (!validation.IsValid || user is null)
         {
             return BadRequest(validation.CopyToModelState(ModelState));
         }
