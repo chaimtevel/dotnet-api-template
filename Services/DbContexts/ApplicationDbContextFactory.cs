@@ -11,7 +11,7 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
         // see https://github.com/aspnet/EntityFrameworkCore/issues/8332 on how to pass args
         // it would be something like dotnet ef migrations add MigrationName -- "connection string"
         // if we use env vars then it would be the following for powershell
-        // powershel: $env:DefaultConnection = ""
+        // powershell: $env:DefaultConnection = ""
         var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
         var envVarName = "DefaultConnection";
