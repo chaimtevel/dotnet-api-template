@@ -1,6 +1,7 @@
 ﻿using FastExpressionCompiler;
 using Mapster;
 using MapsterMapper;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -65,15 +66,23 @@ public static class DependencyInjection
         services.AddIdentity<User, Role>(o =>
         {
             o.Password.RequiredLength = 8;
+
+            // most of the time you'll want this enabled
+            o.SignIn.RequireConfirmedEmail= true;
         })
         .AddUserManager<AccountServices>()
         .AddUserStore<UserStore>()
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddDefaultTokenProviders();
 
+        // set the remember me cookies to be for 30 days
+        services.PostConfigure<CookieAuthenticationOptions>(IdentityConstants.TwoFactorRememberMeScheme, o =>
+        {
+            o.ExpireTimeSpan = TimeSpan.FromDays(30);
+        });
+
         return services;
     }
-
 
     /// <summary>
     /// Adds mapster configs. Note this is the global settings.
