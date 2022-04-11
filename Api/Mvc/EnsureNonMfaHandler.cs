@@ -15,12 +15,16 @@ public class EnsureNonMfaHandler : AuthorizationHandler<NonMfaRequirement>
                 .GetValueOrDefault();
         }
 
-        if (context.User.ToAuthenticatedUser().RequiresMfaClaim)
+        if (context.User.ToAuthenticatedUser().RequiresMfa)
         {
             if(context.Resource is HttpContext httpContext && HasMfaAuthorize(httpContext))
             {
                 context.Succeed(requirement);
             }
+        }
+        else if(context.User.Identity?.IsAuthenticated == true)
+        {
+            context.Succeed(requirement);
         }
 
         return Task.CompletedTask;

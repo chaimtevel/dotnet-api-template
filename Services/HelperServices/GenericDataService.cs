@@ -1,23 +1,50 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Services.DbContexts;
+using Services.EF;
+using Shared.Helpers;
+using Shared.Options;
 using System.Linq.Expressions;
+using static Services.Extensions.EfExtensions;
+using static Shared.Extensions.UserExtensions;
 
 namespace Services.HelperServices;
 
 internal class GenericDataService<TEntity> : IGenericDataService<TEntity>
         where TEntity : class
 {
-    public GenericDataService(ApplicationDbContext dbContext)
+    public GenericDataService(AppDbContext dbContext
+        , IHttpContextAccessor? httpContextAccessor = null)
     {
         DbContext = dbContext;
+        HttpContextAccessor = httpContextAccessor;
     }
 
-    public ApplicationDbContext DbContext { get; }
+    public AppDbContext DbContext { get; }
+    public IHttpContextAccessor? HttpContextAccessor { get; }
 
     public IQueryable<TEntity> Entities => DbContext.Set<TEntity>();
 
-    public IQueryable<T> AccessData<T>() where T : class => DbContext.Set<T>();
+    private IQueryable<T> ApplyGlobalFilters<T>(IQueryable<T> query, DbSetFilterOptions options)
+        where T : class
+    {
+        if (options.IgnoreSoftDeleteFilter && query is IQueryable<ISoftDelete>)
+        {
+            query = query.IgnoreQueryFilters();
+        }
+
+        return query;
+    }
+
+    public IQueryable<T> AccessData<T>(DbSetFilterOptions? filterOptions = null) where T : class
+    {
+        filterOptions ??= new DbSetFilterOptions();
+
+        IQueryable<T> query = DbContext.Set<T>();
+
+        return ApplyGlobalFilters<T>(query, filterOptions);
+    }
+
 
     public Task LoadDataAsync<T>(CancellationToken token = default) where T : class
         => DbContext.Set<T>().LoadAsync();
@@ -97,6 +124,42 @@ internal class GenericDataService<TEntity> : IGenericDataService<TEntity>
         => DbContext.RemoveRange(entities);
 
     public Task<int> SaveChangesAsync(CancellationToken token = default)
-        => DbContext.SaveChangesAsync(token);
+        => SaveChangesAsync(new(), token);
+
+    public Task<int> SaveChangesAsync(DbSaveOptions options, CancellationToken token = default)
+    {
+        PrepareModel(options);
+
+        return DbContext.SaveChangesAsync(token);
+    }
+    
+    private void PrepareModel(DbSaveOptions options)
+    {
+        int? accountId = HttpContextAccessor?.HttpContext?.ToAuthenticatedUser().ID;
+
+        // call to array to avoid catching things changed while we process the entities
+        foreach (EntityEntry entry in DbContext.ChangeTracker.Entries().ToArray())
+        {
+            switch (entry.State)
+            {
+                case EntityState.Deleted:
+                case EntityState.Modified:
+                case EntityState.Added:
+                    TrackHistory(entry, accountId);
+                    break;
+                case EntityState.Detached:
+                case EntityState.Unchanged:
+                default:
+                    break;
+            }
+
+            // this modifies deletes to modified so do this after we track
+            if (options.AutoSetSoftDelete)
+            {
+                entry.HandleSoftDeletes();
+            }
+
+        }
+    }
 
 }

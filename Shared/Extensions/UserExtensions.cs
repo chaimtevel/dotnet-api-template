@@ -15,11 +15,13 @@ public static class UserExtensions
 
     public static List<System.Security.Claims.Claim> GetBaseClaims(this User user)
     {
-        return new List<System.Security.Claims.Claim>
+        var baseClaims = new List<System.Security.Claims.Claim>
         {
             new System.Security.Claims.Claim(ClaimTypes.Email, user.Email),
             new System.Security.Claims.Claim(ClaimTypes.Name, user.Email),
-            new System.Security.Claims.Claim(ClaimTypes.NameIdentifier, user.Id.ToString()) // just an example
+            new System.Security.Claims.Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
         };
+
+        return baseClaims;
     }
 }

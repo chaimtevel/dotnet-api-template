@@ -13,23 +13,14 @@ namespace Shared.Auth
 
         public ClaimsPrincipal Principal { get; }
 
-        public int? ID
-        {
-            get
-            {
-                if (int.TryParse(Principal.FindFirstValue(ClaimTypes.NameIdentifier), out int id))
-                {
-                    return id;
-                }
-
-                return default;
-            }
-        }
+        public int? ID => (Principal
+            .FindFirstValue(ClaimTypes.NameIdentifier)
+            ?.ToInt());
 
         public string Email => Principal.FindFirstValue(ClaimTypes.Email);
         public string? UserName => Principal?.Identity?.Name;
 
-        public bool RequiresMfaClaim => (Principal
+        public bool RequiresMfa => (Principal
             .FindFirstValue(Permissions.RequiresMfaClaim)
             ?.ToBool())
             .GetValueOrDefault();

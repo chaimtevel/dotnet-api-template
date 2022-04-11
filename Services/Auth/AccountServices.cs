@@ -1,8 +1,14 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Services.AppServices;
 using Services.HelperServices;
+using Shared.Models.API;
 using Shared.Models.DB.Identity;
+using Shared.Validation;
+using static Services.Extensions.ServiceValidationExtensions;
+using static Shared.Extensions.EnumerableExtensions;
 using SysClaim = System.Security.Claims;
 
 namespace Services.Auth
@@ -17,12 +23,13 @@ namespace Services.Auth
             , IUserStore<User> store
             , IOptions<IdentityOptions> optionsAccessor
             , IPasswordHasher<User> passwordHasher
+            , IEnumerable<IUserValidator<User>> userValidators
             , IEnumerable<IPasswordValidator<User>> passwordValidators
             , ILookupNormalizer keyNormalizer
             , IdentityErrorDescriber errors
             , IServiceProvider services
             , ILogger<UserManager<User>> logger)
-            : base(store, optionsAccessor, passwordHasher, Array.Empty<UserValidator<User>>(), passwordValidators, keyNormalizer, errors, services, logger)
+            : base(store, optionsAccessor, passwordHasher, userValidators, passwordValidators, keyNormalizer, errors, services, logger)
         {
             DataService = dataService;
         }
@@ -38,10 +45,50 @@ namespace Services.Auth
         {
             var userClaims = await base.GetClaimsAsync(user);
 
-            userClaims = userClaims.Concat(user.UserRoles.SelectMany(ur => ur.Role.RoleClaims)
-                .Select(rc => new SysClaim.Claim(rc.Claim.ClaimType, rc.Claim.ClaimValue))).ToArray();
+            var roleClaims = user.UserRoles
+                .SelectMany(ur => ur.Role.RoleClaims)
+                .Select(rc => new SysClaim.Claim(rc.Claim.ClaimType, rc.Claim.ClaimValue));
+
+            userClaims = userClaims.Concat(roleClaims).ToArray();
 
             return userClaims;
+        }
+
+        public async Task<(User?, ServiceValidation)> CreateUserAsync(UserAPI api
+            , IPersonService personService, CancellationToken token)
+        {
+            ServiceValidation validation = await DataService.ValidateIDsAsync<Role>(api.RoleIDs, r => r.Id, token);
+
+            var (personDb, personValidation) = await personService.UpsertPersonAsync(api, token, false);
+            personValidation.CopyTo(validation);
+
+            if (!validation.IsValid) { return (null, validation); }
+
+            var user = new User
+            {
+                Email = api.Email,
+                EmailConfirmed = false,
+                UserName = api.Email,
+                Person = personDb
+            };
+
+            var foundRoles = await DataService.AccessData<Role>()
+                .Where(r => api.RoleIDs.Contains(r.Id))
+                .ToDictionaryAsync(r => r.Id, token);
+
+            // rely that these role ids are valid based on the above validation
+            foreach (var userRoleId in api.RoleIDs)
+            {
+                var role = foundRoles[userRoleId];
+
+                user.UserRoles.Add(new UserRole { Role = role });
+            }
+
+            IdentityResult userCreateResult = await CreateAsync(user);
+
+            userCreateResult.Errors.Each(e => validation.Add(e.Code, e.Description));
+
+            return (user, validation);
         }
 
     }

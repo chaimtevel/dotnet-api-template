@@ -6,11 +6,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Services.AppServices;
 using Services.Auth;
-using Services.DbContexts;
+using Services.EF;
 using Services.HelperServices;
 using Shared.Mappings;
 using Shared.Models.DB.Identity;
+using Shared.Options;
 using System.Reflection;
 
 namespace Services.Extensions;
@@ -25,11 +27,13 @@ public static class DependencyInjection
             .AddAuthService()
             .AddDb(configuration)
             .AddEFCoreIdentity()
+            .AddHttpContextAccessor()
+            .AddMessagingService(configuration)
+            .AddMapster(new[] { apiAssembly, typeof(MapsterGenericRegister).Assembly })
             .AddScoped(typeof(IGenericDataService<>), typeof(GenericDataService<>))
-            .AddMapster(new[] { apiAssembly, typeof(MapsterGenericRegister).Assembly });
-
-        // for a generic template this is good enough. Once its implemented this would need to be adjusted accordingly
-        services.AddHttpClient<IMessagingService, MessagingService>();
+            .AddScoped<IPersonService, PersonService>()
+            .AddScoped<IGeoService, GeoService>()
+            .AddSingleton<ICachingService, CachingService>();
 
         return services;
     }
@@ -58,7 +62,7 @@ public static class DependencyInjection
             .UseSqlServer(connectionString, o => o.EnableRetryOnFailure().UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
             .UseLazyLoadingProxies();
 
-        return doPool ? services.AddDbContextPool<ApplicationDbContext>(optionsConfig) : services.AddDbContext<ApplicationDbContext>(optionsConfig);
+        return doPool ? services.AddDbContextPool<AppDbContext>(optionsConfig) : services.AddDbContext<AppDbContext>(optionsConfig);
     }
 
     public static IServiceCollection AddEFCoreIdentity(this IServiceCollection services)
@@ -72,7 +76,7 @@ public static class DependencyInjection
         })
         .AddUserManager<AccountServices>()
         .AddUserStore<UserStore>()
-        .AddEntityFrameworkStores<ApplicationDbContext>()
+        .AddEntityFrameworkStores<AppDbContext>()
         .AddDefaultTokenProviders();
 
         // set the remember me cookies to be for 30 days
@@ -109,5 +113,12 @@ public static class DependencyInjection
         return services;
     }
 
+    public static IServiceCollection AddMessagingService(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<EmailOptions>(configuration.GetSection(nameof(EmailOptions)))
+            .AddSingleton<IMessagingService, MessagingService>();
+
+        return services;
+    }
 
 }

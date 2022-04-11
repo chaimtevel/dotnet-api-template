@@ -42,7 +42,6 @@ namespace Services.Auth
             {
                 DataService.Add(matchedClaim.OurClaim);
             }
-            
         }
 
         public Task AddLoginAsync(User user, UserLoginInfo login, CancellationToken cancellationToken)

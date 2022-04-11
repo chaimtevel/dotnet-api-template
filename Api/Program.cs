@@ -1,11 +1,11 @@
+using Api.Mvc;
 using Gelf.Extensions.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Shared.Options;
+using static Api.Extensions.AspNetCoreExtensions;
 using static Api.Extensions.PermissionExtensions;
 using static Services.Extensions.DependencyInjection;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,13 +13,12 @@ builder.Services.BuildServices(builder.Configuration);
 
 builder.Logging.BuildLogging(builder.Configuration, builder.Environment);
 
-
 var app = builder.Build();
 
-app.BuildApp(app.Configuration, app.Environment);
+app.BuildApp(app.Configuration, app.Environment)
+    .AddForwardHeaderMiddleware();
 
 app.Run();
-
 
 
 internal static class StartupMethods
@@ -27,12 +26,16 @@ internal static class StartupMethods
     public static IServiceCollection BuildServices(this IServiceCollection services, IConfiguration configuration)
     {
         services
-            .AddMvc()
+            .AddMvc(o => o.Filters.Add(typeof(BadRequestActionFilter)))
             .AddNewtonsoftJson(o =>
             {
                 o.SerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Utc;
                 o.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 o.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+            })
+            .ConfigureApiBehaviorOptions(o =>
+            {
+                o.InvalidModelStateResponseFactory = c => c.ModelState.FormatBadRequestResult();
             });
 
         services.Configure<JwtOptions>(configuration.GetSection(nameof(JwtOptions)));
@@ -41,30 +44,9 @@ internal static class StartupMethods
             .AddCors()
             .AddAuthentication(options =>
             {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddJwtBearer(o =>
-            {
-                var jwtOptions = new JwtOptions();
-                configuration.Bind("JwtOptions", jwtOptions);
-
-                o.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidIssuer = jwtOptions.Issuer,
-
-                    ValidateAudience = true,
-                    ValidAudience = jwtOptions.Audience,
-
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = jwtOptions.SecretToKey,
-
-                    RequireExpirationTime = true,
-                    ValidateLifetime = true
-                };
-            });
+            .AddJwtBearer(o => o.ConfigureOptions(configuration));
 
         services.AddSwaggerGen(c =>
         {
@@ -137,7 +119,7 @@ internal static class StartupMethods
 
         app.UseCors(b =>
         {
-            string[] allowedOrigins = configuration.GetSection("CorsAllowedOrigins").Get<string[]>() ?? System.Array.Empty<string>();
+            string[] allowedOrigins = configuration.GetValue("CorsAllowedOrigins", System.Array.Empty<string>());
             b.WithOrigins(allowedOrigins)
                 .AllowAnyMethod()
                 .AllowAnyHeader()

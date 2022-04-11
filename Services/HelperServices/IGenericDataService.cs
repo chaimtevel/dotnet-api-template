@@ -1,17 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Shared.Options;
 using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Services.HelperServices;
 
 public interface IDataService
 {
-    IQueryable<T> AccessData<T>() where T : class;
+    IQueryable<T> AccessData<T>(DbSetFilterOptions? filterOptions = null) where T : class;
     Task LoadDataAsync<T>(CancellationToken token = default) where T : class;
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     EntityEntry Add(object entity);

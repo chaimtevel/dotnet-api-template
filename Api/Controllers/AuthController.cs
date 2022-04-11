@@ -67,7 +67,7 @@ public class AuthController : Controller
         else if (multiFactorCode.HasValue())
         {
             // we need to send a 2fa message
-            var (validation, maskedSentToValue) = await messagingService
+            var (validation, contactType, maskedSentToValue) = await messagingService
                 .SendMfaMessageAsync(user, multiFactorCode!, Logger, token);
 
             if (!validation.IsValid) { return BadRequest(validation.CopyToModelState(ModelState)); }
@@ -96,7 +96,7 @@ public class AuthController : Controller
             return BadRequest(ModelState);
         }
 
-        var (validation, maskedSentToValue) = await messagingService.SendMfaMessageAsync(user, code, Logger, token);
+        var (validation, contactType, maskedSentToValue) = await messagingService.SendMfaMessageAsync(user, code, Logger, token);
 
         if (!validation.IsValid) { return BadRequest(validation.CopyToModelState(ModelState)); }
 

@@ -27,4 +27,16 @@ public static class EnumerableExtensions
         return collection;
     }
 
+    public static bool IsEmpty<T>(this IEnumerable<T> collection)
+    {
+        if (collection == null)
+        {
+            return true;
+        }
+        else
+        {
+            return collection.Any() == false;
+        }
+    }
+
 }

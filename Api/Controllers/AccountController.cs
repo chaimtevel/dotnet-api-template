@@ -48,9 +48,9 @@ public class AccountController : ControllerBase
             Logger.LogError("No domain configured to use in links for emails");
         }
 
-        await messagingService.SendResetPasswordEmailAsync(url, resetPwToken, request.Email, token);
+        await messagingService.SendResetPasswordEmailAsync(url, resetPwToken, user, token);
 
-        return Ok();
+        return Accepted();
     }
 
     [HttpPost("forgotPwReset")]
