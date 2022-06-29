@@ -2,6 +2,7 @@
 using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -30,6 +31,7 @@ public static class DependencyInjection
             .AddHttpContextAccessor()
             .AddMessagingService(configuration)
             .AddMapster(new[] { apiAssembly, typeof(MapsterGenericRegister).Assembly })
+            .AddDataProtection()
             .AddScoped(typeof(IGenericDataService<>), typeof(GenericDataService<>))
             .AddScoped<IPersonService, PersonService>()
             .AddScoped<IGeoService, GeoService>()
@@ -117,6 +119,17 @@ public static class DependencyInjection
     {
         services.Configure<EmailOptions>(configuration.GetSection(nameof(EmailOptions)))
             .AddSingleton<IMessagingService, MessagingService>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddDataProtection(this IServiceCollection services)
+    {
+        services.AddDataProtection(o =>
+        {
+            o.ApplicationDiscriminator = Shared.Constants.System.SharedDataProtectionDiscriminator;
+        })
+        .PersistKeysToDbContext<AppDbContext>();
 
         return services;
     }
