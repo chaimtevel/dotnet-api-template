@@ -1,10 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Shared.Models.Requests
+namespace Shared.Models.Requests;
+
+public class ExternalAuthenticationRequest
 {
-    public class ExternalAuthenticationRequest
-    {
-        [Required(AllowEmptyStrings = false)]
-        public string Token { get; set; }
-    }
+    [Required(AllowEmptyStrings = false)]
+    public string Token { get; set; } = string.Empty;
 }

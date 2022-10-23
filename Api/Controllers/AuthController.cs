@@ -36,7 +36,7 @@ public class AuthController : Controller
     public IAccountServices AccountServices { get; }
     public ILogger<AuthController> Logger { get; }
 
-    [HttpPost("login/{authProvider}")]
+    [HttpPost("login/{authProvider}"), AllowAnonymous]
     public async Task<ActionResult<AuthenticationResponse>>
         LoginAsync(AuthProviders authProvider, ExternalAuthenticationRequest authentication, CancellationToken token)
     {
@@ -52,7 +52,7 @@ public class AuthController : Controller
         return Ok(response);
     }
 
-    [HttpPost("login/basic")]
+    [HttpPost("login/basic"), AllowAnonymous]
     public async Task<ActionResult<AuthenticationResponse>> LoginAsync([FromBody] BasicAuthenticationRequest basicAuth
             , [FromServices] IMessagingService messagingService, CancellationToken token)
     {
@@ -82,7 +82,7 @@ public class AuthController : Controller
         return Ok(response);
     }
 
-    [HttpGet("sendMfa"), Authorize, MfaAuthorize]
+    [HttpGet("sendMfa"), MfaAuthorize]
     public async Task<ActionResult<AuthenticationResponse>> SendMfaCodeAsync([FromServices] IMessagingService messagingService
         , CancellationToken token)
     {
@@ -105,7 +105,7 @@ public class AuthController : Controller
         return Ok(response);
     }
 
-    [HttpGet("verifyMfa"), Authorize, MfaAuthorize]
+    [HttpGet("verifyMfa"), MfaAuthorize]
     public async Task<ActionResult<AuthenticationResponse>> VerifyMfaAsync([FromQuery] VerifyMfaRequest request
         , CancellationToken token)
     {

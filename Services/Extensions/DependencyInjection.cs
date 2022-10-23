@@ -74,7 +74,7 @@ public static class DependencyInjection
             o.Password.RequiredLength = 8;
 
             // most of the time you'll want this enabled
-            o.SignIn.RequireConfirmedEmail= true;
+            o.SignIn.RequireConfirmedEmail = true;
         })
         .AddUserManager<AccountServices>()
         .AddUserStore<UserStore>()

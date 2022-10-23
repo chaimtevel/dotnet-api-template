@@ -84,7 +84,7 @@ namespace Services.Auth
                 user.UserRoles.Add(new UserRole { Role = role });
             }
 
-            IdentityResult userCreateResult = await CreateAsync(user);
+            IdentityResult userCreateResult = await CreateAsync(user, api.Password);
 
             userCreateResult.Errors.Each(e => validation.Add(e.Code, e.Description));
 

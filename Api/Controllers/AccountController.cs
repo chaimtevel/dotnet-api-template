@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Services.Auth;
 using Services.HelperServices;
 using Shared.Models.Requests;
@@ -8,8 +9,7 @@ using static Shared.Extensions.EnumerableExtensions;
 
 namespace Api.Controllers;
 
-[Route("api/[controller]")]
-[ApiController]
+[Route("api/[controller]"), ApiController]
 public class AccountController : ControllerBase
 {
     public AccountController(IAccountServices accountServices
@@ -26,7 +26,7 @@ public class AccountController : ControllerBase
     public ILogger<AccountController> Logger { get; }
 
 
-    [HttpPost("forgotPw")]
+    [HttpPost("forgotPw"), AllowAnonymous]
     public async Task<ActionResult> ForgotPasswordAsync(ForgotPasswordRequest request
         , [FromServices] IMessagingService messagingService, CancellationToken token)
     {
@@ -53,7 +53,7 @@ public class AccountController : ControllerBase
         return Accepted();
     }
 
-    [HttpPost("forgotPwReset")]
+    [HttpPost("forgotPwReset"), AllowAnonymous]
     public async Task<ActionResult> ResetPassword(ResetPwWithTokenRequest request, CancellationToken token)
     {
         // first make sure this email is in the system

@@ -156,7 +156,7 @@ internal static class StartupMethods
 
         app.UseEndpoints(b =>
         {
-            b.MapControllers();
+            b.MapControllers().RequireAuthorization();
         });
 
         return app;

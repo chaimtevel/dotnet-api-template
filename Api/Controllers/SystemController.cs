@@ -1,12 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Services.AppServices;
 using Services.HelperServices;
 using static Shared.Extensions.ReflectionExtensions;
 
 namespace Api.Controllers;
 
-[Route("api/[controller]"), ApiController, Authorize]
+[Route("api/[controller]"), ApiController]
 public class SystemController : ControllerBase
 {
     public SystemController(IGeoService geoService, ICachingService cachingService)
