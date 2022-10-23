@@ -59,10 +59,15 @@ public static class DependencyInjection
     {
         // modify for the appropriate db engine
         // note that pooled connections can result in memory leaks
-        string connectionString = configuration.GetConnectionString("DefaultConnection");
-        void optionsConfig(DbContextOptionsBuilder o) => o
-            .UseSqlServer(connectionString, o => o.EnableRetryOnFailure().UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
-            .UseLazyLoadingProxies();
+        void optionsConfig(DbContextOptionsBuilder o)
+        {
+            // important - we add this in this scope as DI only loads all configs lazily
+            // see the add redis method
+            string connectionString = configuration.GetConnectionString("DefaultConnection");
+
+            o.UseSqlServer(connectionString, o => o.EnableRetryOnFailure().UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
+                .UseLazyLoadingProxies();
+        }
 
         return doPool ? services.AddDbContextPool<AppDbContext>(optionsConfig) : services.AddDbContext<AppDbContext>(optionsConfig);
     }

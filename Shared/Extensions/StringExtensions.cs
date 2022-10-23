@@ -1,12 +1,22 @@
-﻿using System.Text;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 namespace Shared.Extensions;
 
 public static class StringExtensions
 {
-    public static bool IsEmpty(this string? str) => string.IsNullOrWhiteSpace(str);
+    public static bool IsEmpty([NotNull] this string? str)
+    {
+        var isEmpty = string.IsNullOrWhiteSpace(str);
 
-    public static bool HasValue(this string? str) => str.IsEmpty() == false;
+        // setting this has no affect. Its just to conform to the not null attribute
+        // this tells the compiler that str is not null if this method is called
+        str = string.Empty;
+
+        return isEmpty;
+    }
+
+    public static bool HasValue([NotNull] this string? str) => str.IsEmpty() == false;
 
     public static string? NullIfEmpty(this string str)
         => str.IsEmpty() ? null : str;
