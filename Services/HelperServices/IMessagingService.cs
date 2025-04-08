@@ -1,4 +1,4 @@
-﻿using Shared.Models.General;
+﻿using Shared.Messaging;
 
 namespace Services.HelperServices;
 

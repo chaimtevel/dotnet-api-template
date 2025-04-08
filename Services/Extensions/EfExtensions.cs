@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Shared.Helpers;
 using Shared.Models.DB.Identity;
@@ -10,39 +9,10 @@ namespace Services.Extensions;
 
 public static class EfExtensions
 {
-    #region model builder
+    #region 
 
-    /// <summary>
-    /// We don't use conventions to do this as conventions don't respect Column attributes
-    /// </summary>
-    /// <param name="builder"></param>
-    /// <returns></returns>
-    public static ModelBuilder SetDefaultStringDbType(this ModelBuilder builder)
+    public static ModelBuilder ConfigureIdentity(this ModelBuilder builder)
     {
-        var stringType = typeof(string);
-
-        foreach (var property in builder.Model.GetEntityTypes()
-            .SelectMany(t => t.GetProperties())
-            .Where(p => p.ClrType == stringType))
-        {
-            if (string.IsNullOrWhiteSpace(property.GetColumnType()) && property.GetMaxLength() == null)
-            {
-                property.SetColumnType("VARCHAR(50)");
-            }
-        }
-
-        return builder;
-    }
-
-    public static ModelBuilder ConfigureAspNetIdentity(this ModelBuilder builder)
-    {
-        // remove unused entities
-        builder.Ignore<IdentityRoleClaim<int>>();
-        builder.Ignore<IdentityUserClaim<int>>();
-        builder.Ignore<IdentityUserRole<int>>();
-        builder.Ignore<IdentityUserLogin<int>>();
-        builder.Ignore<IdentityUserToken<int>>();
-
         builder.Entity<Claim>();
 
         builder.Entity<User>().ToTable("Users");

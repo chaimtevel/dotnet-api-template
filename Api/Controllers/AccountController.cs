@@ -43,7 +43,7 @@ public class AccountController : ControllerBase
         var resetPwToken = await AccountServices.GeneratePasswordResetTokenAsync(user);
 
         var url = Configuration.GetAppUrl();
-        if (string.IsNullOrWhiteSpace(url))
+        if (url.IsEmpty())
         {
             Logger.LogError("No domain configured to use in links for emails");
         }

@@ -13,7 +13,7 @@ public interface IAccountServices
     IGenericDataService<User> DataService { get; }
     Task<IEnumerable<SysClaims.Claim>> GetAllClaimsAsync(User user, CancellationToken token);
     Task<(User?, ServiceValidation)> CreateUserAsync(UserAPI api, IPersonService personService, CancellationToken token);
-    Task<User> FindByEmailAsync(string email);
+    Task<User?> FindByEmailAsync(string email);
     Task<string> GeneratePasswordResetTokenAsync(User user);
     Task<IdentityResult> ResetPasswordAsync(User user, string token, string newPassword);
 }

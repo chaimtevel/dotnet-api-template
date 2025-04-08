@@ -81,7 +81,7 @@ namespace Services.Auth
             {
                 var role = foundRoles[userRoleId];
 
-                user.UserRoles.Add(new UserRole { Role = role });
+                user.UserRoles.Add(new UserRole { Role = role, User = user });
             }
 
             IdentityResult userCreateResult = await CreateAsync(user, api.Password);

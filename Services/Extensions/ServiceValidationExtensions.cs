@@ -33,7 +33,7 @@ public static class ServiceValidationExtensions
 
     public static async Task<ServiceValidation> ValidateStateIdsAsync(this IGeoService geoService, IEnumerable<int> stateIds, CancellationToken token)
     {
-        ServiceValidation validation = new();
+        ServiceValidation validation = [];
         var validatedStateIds = await geoService.DoStateIdsExistAsync(stateIds, token);
 
         var invalidStateIds = validatedStateIds.Where(v => !v.exists).Select(s => s.stateId);
@@ -67,11 +67,11 @@ public static class ServiceValidationExtensions
 
     public static async Task<ServiceValidation> ValidateAsync(this IGeoService geoService, AddressAPI address, CancellationToken token)
     {
-        ServiceValidation validation = new();
+        ServiceValidation validation = [];
 
         if (address?.StateID.HasValue == true)
         {
-            (await geoService.ValidateStateIdsAsync(new[] { address.StateID.Value }, token))
+            (await geoService.ValidateStateIdsAsync([address.StateID.Value], token))
                 .CopyTo(validation);
         }
 

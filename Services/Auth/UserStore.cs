@@ -48,15 +48,16 @@ namespace Services.Auth
         {
             if(!Enum.TryParse(login.LoginProvider, out AuthProviders authProvider))
             {
-                throw new ArgumentException($"Invalid value {login.LoginProvider}", nameof(login.LoginProvider));
+                throw new ArgumentException($"Invalid value {login.LoginProvider}", nameof(login));
             }
 
             DataService.Add(new UserLogin
             {
+                User = user,
                 UserID = user.Id,
                 LoginProvider = authProvider,
                 ProviderKey = login.ProviderKey,
-                ProviderDisplayName = login.ProviderDisplayName
+                ProviderDisplayName = login.ProviderDisplayName ?? string.Empty
             });
 
             return Task.FromResult(false);
@@ -89,43 +90,43 @@ namespace Services.Auth
 
         public void Dispose()
         {
-            
+
         }
 
-        public Task<User> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
-            => DataService.AccessData<User>().FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken)!;
+        public Task<User?> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
+            => DataService.AccessData<User>().FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken);
 
-        public Task<User> FindByIdAsync(string userId, CancellationToken cancellationToken)
+        public Task<User?> FindByIdAsync(string userId, CancellationToken cancellationToken)
         {
             if(!int.TryParse(userId, out int intUserId))
             {
-                return Task.FromResult(null as User)!;
+                return Task.FromResult<User?>(null);
             }
 
-            return DataService.AccessData<User>().FirstOrDefaultAsync(u => u.Id == intUserId, cancellationToken)!;
+            return DataService.AccessData<User>().FirstOrDefaultAsync(u => u.Id == intUserId, cancellationToken);
         }
 
-        public async Task<User> FindByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
+        public async Task<User?> FindByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
         {
             if (!Enum.TryParse(loginProvider, out AuthProviders authProvider))
             {
-                return null!;
+                return null;
             }
 
             var userLogin = await DataService.AccessData<UserLogin>()
                 .Include(ul => ul.User)
                 .FirstOrDefaultAsync(ul => ul.LoginProvider == authProvider && ul.ProviderKey == providerKey, cancellationToken);
 
-            return userLogin?.User!;
+            return userLogin?.User;
         }
 
-        public Task<User> FindByNameAsync(string normalizedUserName, CancellationToken token)
-            => DataService.AccessData<User>().FirstOrDefaultAsync(u => u.NormalizedUserName == normalizedUserName, token)!;
+        public Task<User?> FindByNameAsync(string normalizedUserName, CancellationToken token)
+            => DataService.AccessData<User>().FirstOrDefaultAsync(u => u.NormalizedUserName == normalizedUserName, token);
 
         public Task<int> GetAccessFailedCountAsync(User user, CancellationToken cancellationToken)
             => Task.FromResult(user.AccessFailedCount);
 
-        public Task<string> GetAuthenticatorKeyAsync(User user, CancellationToken cancellationToken)
+        public Task<string?> GetAuthenticatorKeyAsync(User user, CancellationToken cancellationToken)
         {
             return GetTokenAsync(user, AuthProviders.Internal.ToString(), AuthenticatorKeyTokenName, cancellationToken);
         }
@@ -141,7 +142,7 @@ namespace Services.Auth
                 .ToList();
         }
 
-        public Task<string> GetEmailAsync(User user, CancellationToken cancellationToken)
+        public Task<string?> GetEmailAsync(User user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.Email);
         }
@@ -172,22 +173,22 @@ namespace Services.Auth
                 .ToList();
         }
 
-        public Task<string> GetNormalizedEmailAsync(User user, CancellationToken cancellationToken)
+        public Task<string?> GetNormalizedEmailAsync(User user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.NormalizedEmail);
         }
 
-        public Task<string> GetNormalizedUserNameAsync(User user, CancellationToken cancellationToken)
+        public Task<string?> GetNormalizedUserNameAsync(User user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.NormalizedUserName);
         }
 
-        public Task<string> GetPasswordHashAsync(User user, CancellationToken cancellationToken)
+        public Task<string?> GetPasswordHashAsync(User user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.PasswordHash);
         }
 
-        public Task<string> GetPhoneNumberAsync(User user, CancellationToken cancellationToken)
+        public Task<string?> GetPhoneNumberAsync(User user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.PhoneNumber);
         }
@@ -197,22 +198,22 @@ namespace Services.Auth
             return Task.FromResult(user.PhoneNumberConfirmed);
         }
 
-        public Task<string> GetSecurityStampAsync(User user, CancellationToken cancellationToken)
+        public Task<string?> GetSecurityStampAsync(User user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.SecurityStamp);
         }
 
-        public Task<string> GetTokenAsync(User user, string loginProvider, string name, CancellationToken cancellationToken)
+        public Task<string?> GetTokenAsync(User user, string loginProvider, string name, CancellationToken cancellationToken)
         {
             if (!Enum.TryParse(loginProvider, out AuthProviders authProvider))
             {
-                return null!;
+                return Task.FromResult<string?>(null);
             }
 
             return DataService.AccessData<UserToken>()
                 .Where(ut => ut.UserID == user.Id && ut.LoginProvider == authProvider && ut.Name == name)
                 .Select(ut => ut.Value)
-                .FirstOrDefaultAsync(cancellationToken)!;
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
         public Task<bool> GetTwoFactorEnabledAsync(User user, CancellationToken cancellationToken)
@@ -225,7 +226,7 @@ namespace Services.Auth
             return Task.FromResult(user.Id.ToString());
         }
 
-        public Task<string> GetUserNameAsync(User user, CancellationToken cancellationToken)
+        public Task<string?> GetUserNameAsync(User user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.UserName);
         }
@@ -338,7 +339,7 @@ namespace Services.Auth
             return SetTokenAsync(user, AuthProviders.Internal.ToString(), AuthenticatorKeyTokenName, key, cancellationToken);
         }
 
-        public Task SetEmailAsync(User user, string email, CancellationToken cancellationToken)
+        public Task SetEmailAsync(User user, string? email, CancellationToken cancellationToken)
         {
             user.Email = email;
             return Task.CompletedTask;
@@ -362,25 +363,25 @@ namespace Services.Auth
             return Task.CompletedTask;
         }
 
-        public Task SetNormalizedEmailAsync(User user, string normalizedEmail, CancellationToken cancellationToken)
+        public Task SetNormalizedEmailAsync(User user, string? normalizedEmail, CancellationToken cancellationToken)
         {
             user.NormalizedEmail = normalizedEmail;
             return Task.CompletedTask;
         }
 
-        public Task SetNormalizedUserNameAsync(User user, string normalizedName, CancellationToken cancellationToken)
+        public Task SetNormalizedUserNameAsync(User user, string? normalizedName, CancellationToken cancellationToken)
         {
             user.NormalizedUserName = normalizedName;
             return Task.CompletedTask;
         }
 
-        public Task SetPasswordHashAsync(User user, string passwordHash, CancellationToken cancellationToken)
+        public Task SetPasswordHashAsync(User user, string? passwordHash, CancellationToken cancellationToken)
         {
             user.PasswordHash = passwordHash;
             return Task.CompletedTask;
         }
 
-        public Task SetPhoneNumberAsync(User user, string phoneNumber, CancellationToken cancellationToken)
+        public Task SetPhoneNumberAsync(User user, string? phoneNumber, CancellationToken cancellationToken)
         {
             user.PhoneNumber = phoneNumber;
             return Task.CompletedTask;
@@ -398,7 +399,7 @@ namespace Services.Auth
             return Task.CompletedTask;
         }
 
-        public async Task SetTokenAsync(User user, string loginProvider, string name, string value, CancellationToken cancellationToken)
+        public async Task SetTokenAsync(User user, string loginProvider, string name, string? value, CancellationToken cancellationToken)
         {
             if (!Enum.TryParse(loginProvider, out AuthProviders authProvider))
             {
@@ -429,7 +430,7 @@ namespace Services.Auth
             return Task.CompletedTask;
         }
 
-        public Task SetUserNameAsync(User user, string userName, CancellationToken cancellationToken)
+        public Task SetUserNameAsync(User user, string? userName, CancellationToken cancellationToken)
         {
             user.UserName = userName;
             return Task.CompletedTask;

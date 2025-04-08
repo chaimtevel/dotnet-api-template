@@ -40,18 +40,24 @@ namespace Services.Auth
         public async Task<(bool isAuthenticated, User? user, string? multiFactorCode)>
             LoginAsync(BasicAuthenticationRequest authentication)
         {
-            var signinResult = await SignInManager
+            var signInResult = await SignInManager
                 .PasswordSignInAsync(authentication.UserName, authentication.Password, true, true);
 
-            if (signinResult.Succeeded)
+            if (signInResult.Succeeded)
             {
                 var user = await SignInManager.UserManager.FindByNameAsync(authentication.UserName);
 
-                return (signinResult.Succeeded, user, default);
+                return (signInResult.Succeeded, user, default);
             }
-            else if (signinResult.RequiresTwoFactor)
+            else if (signInResult.RequiresTwoFactor)
             {
                 var user = await SignInManager.UserManager.FindByNameAsync(authentication.UserName);
+
+                if (user?.Email == null)
+                {
+                    return default;
+                }
+
                 var (multiFactorCode, _) = await GenerateMfaCodeAsync(user.Email, user);
 
                 return (true, user, multiFactorCode);
@@ -140,7 +146,7 @@ namespace Services.Auth
 
             return (user != null, user);
         }
-        
+
         private async Task<(bool isAuthenticated, string email)> GoogleAsync(ExternalAuthenticationRequest authentication)
         {
             try

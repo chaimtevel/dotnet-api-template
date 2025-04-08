@@ -4,20 +4,15 @@ using static Shared.Extensions.ParsingExtensions;
 
 namespace Shared.Auth
 {
-    public class AuthenticatedUser
+    public class AuthenticatedUser(ClaimsPrincipal principal)
     {
-        public AuthenticatedUser(ClaimsPrincipal principal)
-        {
-            Principal = principal;
-        }
-
-        public ClaimsPrincipal Principal { get; }
+        public ClaimsPrincipal Principal { get; } = principal;
 
         public int? ID => (Principal
             .FindFirstValue(ClaimTypes.NameIdentifier)
             ?.ToInt());
 
-        public string Email => Principal.FindFirstValue(ClaimTypes.Email);
+        public string Email => Principal.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
         public string? UserName => Principal?.Identity?.Name;
 
         public bool RequiresMfa => (Principal

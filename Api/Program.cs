@@ -6,6 +6,7 @@ using Shared.Options;
 using static Api.Extensions.AspNetCoreExtensions;
 using static Api.Extensions.PermissionExtensions;
 using static Services.Extensions.DependencyInjection;
+using static Shared.Extensions.SerializationExtensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,11 +28,9 @@ internal static class StartupMethods
     {
         services
             .AddMvc(o => o.Filters.Add(typeof(BadRequestActionFilter)))
-            .AddNewtonsoftJson(o =>
+            .AddJsonOptions(o =>
             {
-                o.SerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Utc;
-                o.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
-                o.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                o.JsonSerializerOptions.SetGlobalMvcSettings();
             })
             .ConfigureApiBehaviorOptions(o =>
             {
@@ -72,15 +71,16 @@ internal static class StartupMethods
             c.AddSecurityDefinition(bearerSchemeName, scheme);
 
             c.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    { scheme, System.Array.Empty<string>() }
-                });
-        })
-        .AddSwaggerGenNewtonsoftSupport();
+            {
+                { scheme, Array.Empty<string>() }
+            });
+        });
 
         // helper service methods
         services.AddApiServices(configuration, typeof(StartupMethods).Assembly)
             .AddApiAuthorization();
+
+        services.AddExceptionHandler<GlobalExceptionHandler>();
 
         return services;
     }
@@ -102,7 +102,7 @@ internal static class StartupMethods
         return loggingBuilder;
     }
 
-    public static IApplicationBuilder BuildApp(this IApplicationBuilder app, IConfiguration configuration, IHostEnvironment hostEnvironment)
+    public static IApplicationBuilder BuildApp(this WebApplication app, IConfiguration configuration, IHostEnvironment hostEnvironment)
     {
         if (hostEnvironment.IsDevelopment())
         {
@@ -113,13 +113,11 @@ internal static class StartupMethods
             app.UseHsts();
         }
 
-        app.UseHttpsRedirection();
-
         app.UseRouting();
 
         app.UseCors(b =>
         {
-            string[] allowedOrigins = configuration.GetValue("CorsAllowedOrigins", System.Array.Empty<string>());
+            string[] allowedOrigins = configuration.GetValue("CorsAllowedOrigins", Array.Empty<string>());
             b.WithOrigins(allowedOrigins)
                 .AllowAnyMethod()
                 .AllowAnyHeader()
@@ -135,29 +133,9 @@ internal static class StartupMethods
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
             });
 
-        app.UseExceptionHandler(a =>
-        {
-            a.Run(async c =>
-            {
-                c.Response.ContentType = "application/json";
-                var ex = c.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        app.UseExceptionHandler(a => { });
 
-                var serialized = System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    Message = ex?.Error.Message ?? "Error processing request",
-#if DEBUG
-                    ex?.Error.StackTrace
-#endif
-                });
-
-                await c.Response.WriteAsync(serialized);
-            });
-        });
-
-        app.UseEndpoints(b =>
-        {
-            b.MapControllers().RequireAuthorization();
-        });
+        app.MapControllers().RequireAuthorization();
 
         return app;
     }

@@ -1,30 +1,44 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Services.AppServices;
 using Services.HelperServices;
+using Shared.Models.Responses;
 using static Shared.Extensions.ReflectionExtensions;
 
 namespace Api.Controllers;
 
 [Route("api/[controller]"), ApiController]
-public class SystemController : ControllerBase
+public class SystemController(IGeoService geoService, ICacheService cacheService) : ControllerBase
 {
-    public SystemController(IGeoService geoService, ICachingService cachingService)
-    {
-        GeoService = geoService;
-        CachingService = cachingService;
-    }
-
-    public IGeoService GeoService { get; }
-    public ICachingService CachingService { get; }
+    public IGeoService GeoService { get; } = geoService;
+    public ICacheService CacheService { get; } = cacheService;
 
     [HttpGet]
     public async Task<ActionResult> GetAsync(CancellationToken token)
     {
+        await Task.CompletedTask;
+
         var response = new
         {
-            States = await GeoService.GetStatesCacheAsync(token)
+            
         };
 
         return Ok(response.ToDictionary(lowercaseFirst: true));
+    }
+
+    [HttpGet("states")]
+    public async Task<ActionResult<IEnumerable<StateResponse>>> GetStatesAsync(CancellationToken token)
+    {
+        var states = await GeoService.GetStatesCacheAsync(token);
+
+        var stateResponses = states
+            .Select(s => new StateResponse
+            {
+                ID = s.ID,
+                Name = s.Name,
+                StateCode = s.Code
+            })
+            .ToArray();
+
+        return Ok(stateResponses);
     }
 }

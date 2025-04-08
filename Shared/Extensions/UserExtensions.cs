@@ -17,10 +17,14 @@ public static class UserExtensions
     {
         var baseClaims = new List<System.Security.Claims.Claim>
         {
-            new System.Security.Claims.Claim(ClaimTypes.Email, user.Email),
-            new System.Security.Claims.Claim(ClaimTypes.Name, user.Email),
             new System.Security.Claims.Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
         };
+
+        if (user.Email.HasValue())
+        {
+            baseClaims.Add(new System.Security.Claims.Claim(ClaimTypes.Email, user.Email));
+            baseClaims.Add(new System.Security.Claims.Claim(ClaimTypes.Name, user.Email));
+        }
 
         return baseClaims;
     }

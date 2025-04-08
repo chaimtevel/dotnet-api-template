@@ -6,21 +6,11 @@ using static Shared.Extensions.EnumerableExtensions;
 
 namespace Services.AppServices;
 
-internal class GeoService : IGeoService
+internal class GeoService(IGenericDataService<State> dataService, ICacheService cacheService, ILogger<IGeoService> logger) : IGeoService
 {
-    public GeoService(IGenericDataService<State> dataService
-        , ICachingService cachingService
-        , ILogger<IGeoService> logger)
-    {
-        DataService = dataService;
-        CachingService = cachingService;
-        Logger = logger;
-    }
-
-    public IGenericDataService<State> DataService { get; }
-    public ICachingService CachingService { get; }
-    public ILogger<IGeoService> Logger { get; }
-
+    public IGenericDataService<State> DataService { get; } = dataService;
+    public ICacheService CacheService { get; } = cacheService;
+    public ILogger<IGeoService> Logger { get; } = logger;
 
     #region State
 
@@ -36,8 +26,12 @@ internal class GeoService : IGeoService
         return query.OrderBy(s => s.Name).ToArrayAsync(token);
     }
 
-    public Task<State[]> GetStatesCacheAsync(CancellationToken token)
-        => CachingService.GetCacheAsync(Shared.Constants.CacheKeys.StatesCache, t => GetStatesAsync(t, true), token, TimeSpan.FromDays(1));
+    public async Task<State[]> GetStatesCacheAsync(CancellationToken token)
+    {
+        var states = await CacheService.GetOrSetAsync(Shared.Constants.CacheKeys.StatesCache, t => GetStatesAsync(t, true), token, TimeSpan.FromDays(1));
+
+        return states ?? [];
+    }
 
     public async Task<State?> GetStateByIdAsync(int stateId, CancellationToken token, bool useCache = true)
     {

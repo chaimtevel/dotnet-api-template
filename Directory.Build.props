@@ -1,0 +1,7 @@
+<Project>
+
+    <ItemGroup>
+        <Using Include="Shared.Extensions.StringExtensions" Static="true" />
+    </ItemGroup>
+
+</Project>

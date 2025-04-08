@@ -7,11 +7,8 @@ using static Services.Extensions.EfExtensions;
 
 namespace Services.EF;
 
-public class AppDbContext : IdentityDbContext<User, Role, int>, IDataProtectionKeyContext
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IDataProtectionKeyContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-    { }
-
     public DbSet<Person> People => Set<Person>();
 
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
@@ -20,7 +17,7 @@ public class AppDbContext : IdentityDbContext<User, Role, int>, IDataProtectionK
     {
         base.OnModelCreating(builder);
 
-        builder.ConfigureAspNetIdentity();
+        builder.ConfigureIdentity();
 
         #region type mappings
 
@@ -37,13 +34,12 @@ public class AppDbContext : IdentityDbContext<User, Role, int>, IDataProtectionK
         // this should be done after the whole model has been built
         builder
             .ConfigureSoftDeletes()
-            .ConfigureTracking()
-            .SetDefaultStringDbType();
+            .ConfigureTracking();
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
-        // TODO: should we add empty strings to null conversions?
+        configurationBuilder.Properties<string>().HaveColumnType("VARCHAR(50)");
 
         base.ConfigureConventions(configurationBuilder);
     }

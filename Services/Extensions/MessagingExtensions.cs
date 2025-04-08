@@ -2,12 +2,10 @@
 using Microsoft.Extensions.Logging;
 using Services.HelperServices;
 using Shared.Helpers;
+using Shared.Messaging;
 using Shared.Models.DB.Identity;
-using Shared.Models.General;
 using Shared.Validation;
 using System.Text;
-using static Shared.Extensions.ModelExtensions;
-using static Shared.Extensions.StringExtensions;
 
 namespace Services.Extensions;
 
@@ -42,7 +40,12 @@ public static class MessagingExtensions
             Body = html.ToString()
         };
 
-        messageData.ToAddresses.Add((user.Email, user.Person?.GetFullName()));
+        messageData.ToAddresses.Add(new()
+        {
+            Email = user.Email ?? string.Empty,
+            FirstName = user.Person?.FirstName ?? string.Empty,
+            LastName = user.Person?.LastName ?? string.Empty
+        });
 
         await messagingService.SendEmailAsync(messageData, token);
 
@@ -56,6 +59,7 @@ public static class MessagingExtensions
         string message = $"Your App verification code is: {code}";
 
         var html = $"<div style=\"font-size:14px;font-family:roboto,sans-serif;color:#212121;\"><b>{message}</b></div>";
+
         var messageData = new EmailMessageData
         {
             Subject = "Your App Verification Code",
@@ -63,11 +67,16 @@ public static class MessagingExtensions
             Body = html
         };
 
-        messageData.ToAddresses.Add((user.Email, null));
+        messageData.ToAddresses.Add(new()
+        {
+            Email = user.Email ?? string.Empty,
+            FirstName = string.Empty,
+            LastName = string.Empty
+        });
 
         await messagingService.SendEmailAsync(messageData, token);
 
-        string firstTwo = user.Email.Left(2), lastTwo = user.Email.Right(2);
+        string firstTwo = user.Email!.Left(2), lastTwo = user.Email!.Right(2);
         return (validation, ContactMethodType.Email, $"{firstTwo}******{lastTwo}");
     }
 }

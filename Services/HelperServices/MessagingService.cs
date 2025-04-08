@@ -3,9 +3,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using MimeKit.Text;
-using Shared.Models.General;
+using Shared.Messaging;
 using Shared.Options;
 using static Shared.Extensions.EnumerableExtensions;
+using static Shared.Extensions.ModelExtensions;
 
 namespace Services.HelperServices;
 
@@ -28,9 +29,9 @@ internal class MessagingService : IMessagingService
         MimeMessage message = new();
         message.From.Add(new MailboxAddress(EmailOptions.FromName, EmailOptions.FromAddress));
 
-        data.ToAddresses.Each(a => message.To.Add(new MailboxAddress(a.name, a.email)));
-        data.CcAddresses.Each(a => message.Cc.Add(new MailboxAddress(a.name, a.email)));
-        data.BccAddresses.Each(a => message.Bcc.Add(new MailboxAddress(a.name, a.email)));
+        data.ToAddresses.Each(a => message.To.Add(new MailboxAddress(a.GetFullName(), a.Email)));
+        data.CcAddresses.Each(a => message.Cc.Add(new MailboxAddress(a.GetFullName(), a.Email)));
+        data.BccAddresses.Each(a => message.Bcc.Add(new MailboxAddress(a.GetFullName(), a.Email)));
 
         CheckForDevEmails(message);
 
